@@ -216,8 +216,21 @@
 | Room | belongs to → Hospital | **Total** | Every Room MUST belong to a Hospital (`hospital_id` NOT NULL) |
 | Appointment | has → Payment | **Partial** | Not every Appointment has a Payment yet; Payment is created after the appointment |
 
-## Disjointness Constraints
+## Subtype Discriminators
 
-| Generalization | Subclasses | Constraint | Meaning |
-|----------------|-----------|------------|---------|
-| User → Person | Patient, Doctor | **Disjoint** | A User can be linked to EITHER a Patient OR a Doctor, never both. Enforced by `person_type CHECK ('Patient', 'Doctor')` |
+### Disjoint vs Overlapping
+
+A **subtype discriminator** specifies whether a supertype instance can belong to multiple subtypes:
+
+| Discriminator | Meaning | Present in Schema? |
+|---------------|---------|--------------------|
+| **Disjoint** | An entity instance can belong to **at most one** subtype (XOR) | Yes — User → Patient/Doctor |
+| **Overlapping** | An entity instance can belong to **multiple** subtypes simultaneously (AND) | No — no overlapping hierarchies exist |
+
+### Disjointness Constraints
+
+| Generalization | Subtypes | Discriminator | Meaning | Enforcement |
+|----------------|----------|--------------|---------|-------------|
+| User → Person | Patient, Doctor | **Disjoint** | A User can be linked to EITHER a Patient OR a Doctor, never both | `person_type CHECK ('Patient', 'Doctor')` — single scalar column cannot hold multiple values |
+
+> **Note:** If the schema had an overlapping hierarchy (e.g., a Person who is both a Patient and a Doctor), it would require a separate junction table instead of a single `person_type` column. This schema has no such case, so **Overlapping** does not apply here.
