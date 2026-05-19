@@ -12,8 +12,8 @@ A Hospital Information System (HIS) for the **Surgery Department** — managing 
 | File | Description |
 |------|-------------|
 | `docs/erd/ERD.puml` | Original PlantUML ERD |
-| `docs/erd/erd_full.md` | Full system ERD (Mermaid flowchart TD) with all entities, attributes, relationships, and completeness/disjointness constraints |
-| `docs/erd/entities/` | Individual Mermaid entity diagrams (one per entity with full attribute listing) |
+| `docs/erd/erd_full.mermaid` | Full system ERD (Mermaid flowchart TD) with all entities, attributes, relationships, and completeness/disjointness constraints |
+| `docs/erd/entities/` | Individual Mermaid entity diagrams (.mermaid) — one per entity |
 
 **Entities identified:**
 - **Patient** — core entity with personal data, medical history, vital signs, admission date
@@ -36,7 +36,7 @@ A Hospital Information System (HIS) for the **Surgery Department** — managing 
 ### Deliverable 2: Relational Schema Mapping
 **Files:**
 - `docs/erd/relational_schema.md` — detailed column-level mapping (3NF, domains, constraints)
-- `docs/erd/relational_mapping.md` — ER-to-relational mapping diagram (Mermaid flowchart) with rules and normalization notes
+- `docs/erd/relational_mapping.mermaid` — ER-to-relational mapping diagram (Mermaid flowchart LR) with rules and normalization notes
 - `docs/erd/keys_table.md` — comprehensive PK/FK reference table with composite keys, polymorphic refs, and indexes
 
 ### Deliverable 3: SQL Implementation

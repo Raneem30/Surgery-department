@@ -1,0 +1,358 @@
+flowchart TD
+    classDef entity fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+    classDef attr fill:#fff9c4,stroke:#fbc02d,stroke-width:1px,color:#000
+    classDef rel fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px,color:#000
+    classDef constraint fill:#e8f5e9,stroke:#2e7d32,stroke-width:1px,stroke-dasharray: 5 5,color:#000
+
+    %% ===== ENTITIES =====
+    ePatient[PATIENT]:::entity
+    eHospital[HOSPITAL]:::entity
+    eDepartment[DEPARTMENT]:::entity
+    eDeptLoc[DEPARTMENT_LOCATION]:::entity
+    eDoctor[DOCTOR]:::entity
+    eTreats[TREATS]:::entity
+    ePrescription[PRESCRIPTION]:::entity
+    eMedication[MEDICATION]:::entity
+    ePresMed[PRESCRIPTION_MEDICATION]:::entity
+    eRoom[ROOM]:::entity
+    eAppointment[APPOINTMENT]:::entity
+    ePayment[PAYMENT]:::entity
+    eUser[USER]:::entity
+    eContact[CONTACT_INQUIRY]:::entity
+    eGeo[GEO_LOCATION]:::entity
+    eScan[SCAN_DOCUMENT]:::entity
+
+    %% ===== RELATIONSHIPS (Diamonds) =====
+    rContains{contains}:::rel
+    rHasLoc{has locations}:::rel
+    rChaired{chaired by}:::rel
+    rEmploys{employs}:::rel
+    rTreatsRel{treats}:::rel
+    rWrites{writes}:::rel
+    rReceives{receives}:::rel
+    rIncludes{includes}:::rel
+    rContainsRoom{contains}:::rel
+    rAssigned{assigned to}:::rel
+    rBooks{books}:::rel
+    rSched{scheduled with}:::rel
+    rHasPay{has payment}:::rel
+    rHasScan{has scans}:::rel
+    rUploads{uploads}:::rel
+
+    %% ===== ATTRIBUTES (Ovals) =====
+    %% Patient
+    aPatPk([patient_number PK]):::attr
+    aPatSsn([ssn]):::attr
+    aPatName([name]):::attr
+    aPatAddr([address]):::attr
+    aPatPhone([phone]):::attr
+    aPatBdate([birthdate]):::attr
+    aPatSex([sex]):::attr
+    aPatHist([medical_history]):::attr
+    aPatBP([blood_pressure]):::attr
+    aPatHR([heart_rate]):::attr
+    aPatTemp([temperature]):::attr
+    aPatAdmit([admission_date]):::attr
+
+    %% Hospital
+    aHospPk([hospital_id PK]):::attr
+    aHospName([name]):::attr
+    aHospAddr([address]):::attr
+
+    %% Department
+    aDeptPk([department_code PK]):::attr
+    aDeptName([name]):::attr
+    aDeptHospFk([hospital_id FK]):::attr
+    aDeptChairFk([chairman_ssn FK]):::attr
+    aDeptChairStart([chair_start_date]):::attr
+
+    %% Department_Location
+    aDLDeptFk([department_code PK FK]):::attr
+    aDLLoc([location PK]):::attr
+
+    %% Doctor
+    aDocPk([ssn PK]):::attr
+    aDocName([name]):::attr
+    aDocSex([sex]):::attr
+    aDocBdate([birth_date]):::attr
+    aDocMajor([major_area]):::attr
+    aDocDegree([degree]):::attr
+    aDocDeptFk([department_code FK]):::attr
+    aDocJoin([join_date]):::attr
+    aDocEmail([email]):::attr
+    aDocPhone([phone]):::attr
+
+    %% Treats
+    aTrPatFk([patient_number PK FK]):::attr
+    aTrDocFk([doctor_ssn PK FK]):::attr
+    aTrHours([hours_per_week]):::attr
+
+    %% Prescription
+    aRxPk([prescription_id PK]):::attr
+    aRxDocFk([doctor_ssn FK]):::attr
+    aRxPatFk([patient_number FK]):::attr
+    aRxDate([prescription_date]):::attr
+    aRxStart([start_date]):::attr
+    aRxEnd([end_date]):::attr
+
+    %% Medication
+    aMedPk([medication_id PK]):::attr
+    aMedName([name]):::attr
+
+    %% Prescription_Medication
+    aPMRxFk([prescription_id PK FK]):::attr
+    aPMMedFk([medication_id PK FK]):::attr
+    aPMTimes([times_per_day]):::attr
+    aPMDose([dose]):::attr
+
+    %% Room
+    aRoomPk([room_id PK]):::attr
+    aRoomHospFk([hospital_id FK]):::attr
+    aRoomNum([room_number]):::attr
+    aRoomType([room_type]):::attr
+    aRoomAvail([is_available]):::attr
+
+    %% Appointment
+    aAppPk([appointment_id PK]):::attr
+    aAppPatFk([patient_number FK]):::attr
+    aAppDocFk([doctor_ssn FK]):::attr
+    aAppRoomFk([room_id FK]):::attr
+    aAppDate([appointment_date]):::attr
+    aAppStatus([status]):::attr
+
+    %% Payment
+    aPayPk([payment_id PK]):::attr
+    aPayAppFk([appointment_id FK]):::attr
+    aPayAmt([amount]):::attr
+    aPayDate([payment_date]):::attr
+    aPayMethod([payment_method]):::attr
+    aPayStatus([status]):::attr
+
+    %% User
+    aUserPk([user_id PK]):::attr
+    aUserUname([username]):::attr
+    aUserPwd([password_hash]):::attr
+    aUserRole([role]):::attr
+    aUserType([person_type]):::attr
+    aUserId([person_id]):::attr
+
+    %% Contact_Inquiry
+    aConPk([inquiry_id PK]):::attr
+    aConName([name]):::attr
+    aConEmail([email]):::attr
+    aConSubj([subject]):::attr
+    aConMsg([message]):::attr
+    aConTime([submitted_at]):::attr
+    aConRes([is_resolved]):::attr
+
+    %% Geo_Location
+    aGeoPk([location_id PK]):::attr
+    aGeoLat([latitude]):::attr
+    aGeoLon([longitude]):::attr
+    aGeoAddr([address]):::attr
+    aGeoType([entity_type]):::attr
+    aGeoId([entity_id]):::attr
+
+    %% Scan_Document
+    aScanPk([scan_id PK]):::attr
+    aScanPatFk([patient_number FK]):::attr
+    aScanDocFk([doctor_ssn FK]):::attr
+    aScanFile([file_path]):::attr
+    aScanTime([upload_date]):::attr
+    aScanDesc([description]):::attr
+
+    %% ===== COMPLETENESS & DISJOINTNESS CONSTRAINTS =====
+    subgraph Constraints["Completeness & Disjointness Constraints"]
+        cUserGen[USER generalizes to Patient / Doctor]:::constraint
+        cUserComp[Completeness: PARTIAL — not all Users link to Person]:::constraint
+        cUserDisj[Disjointness: DISJOINT — User is Patient XOR Doctor]:::constraint
+        cDeptChair[Department.chairman_ssn → DOCTOR]:::constraint
+        cDeptComp[Completeness: PARTIAL — not all Departments have a chairman]:::constraint
+        cDocDept[DOCTOR → Department]:::constraint
+        cDocComp[Completeness: TOTAL — every Doctor belongs to a Dept]:::constraint
+        cHospDept[HOSPITAL → Department]:::constraint
+        cHospComp[Completeness: TOTAL — every Dept belongs to a Hospital]:::constraint
+    end
+
+    %% ===== ATTRIBUTE CONNECTIONS =====
+    %% Patient
+    ePatient --- aPatPk
+    ePatient --- aPatSsn
+    ePatient --- aPatName
+    ePatient --- aPatAddr
+    ePatient --- aPatPhone
+    ePatient --- aPatBdate
+    ePatient --- aPatSex
+    ePatient --- aPatHist
+    ePatient --- aPatBP
+    ePatient --- aPatHR
+    ePatient --- aPatTemp
+    ePatient --- aPatAdmit
+
+    %% Hospital
+    eHospital --- aHospPk
+    eHospital --- aHospName
+    eHospital --- aHospAddr
+
+    %% Department
+    eDepartment --- aDeptPk
+    eDepartment --- aDeptName
+    eDepartment --- aDeptHospFk
+    eDepartment --- aDeptChairFk
+    eDepartment --- aDeptChairStart
+
+    %% Department_Location
+    eDeptLoc --- aDLDeptFk
+    eDeptLoc --- aDLLoc
+
+    %% Doctor
+    eDoctor --- aDocPk
+    eDoctor --- aDocName
+    eDoctor --- aDocSex
+    eDoctor --- aDocBdate
+    eDoctor --- aDocMajor
+    eDoctor --- aDocDegree
+    eDoctor --- aDocDeptFk
+    eDoctor --- aDocJoin
+    eDoctor --- aDocEmail
+    eDoctor --- aDocPhone
+
+    %% Treats
+    eTreats --- aTrPatFk
+    eTreats --- aTrDocFk
+    eTreats --- aTrHours
+
+    %% Prescription
+    ePrescription --- aRxPk
+    ePrescription --- aRxDocFk
+    ePrescription --- aRxPatFk
+    ePrescription --- aRxDate
+    ePrescription --- aRxStart
+    ePrescription --- aRxEnd
+
+    %% Medication
+    eMedication --- aMedPk
+    eMedication --- aMedName
+
+    %% Prescription_Medication
+    ePresMed --- aPMRxFk
+    ePresMed --- aPMMedFk
+    ePresMed --- aPMTimes
+    ePresMed --- aPMDose
+
+    %% Room
+    eRoom --- aRoomPk
+    eRoom --- aRoomHospFk
+    eRoom --- aRoomNum
+    eRoom --- aRoomType
+    eRoom --- aRoomAvail
+
+    %% Appointment
+    eAppointment --- aAppPk
+    eAppointment --- aAppPatFk
+    eAppointment --- aAppDocFk
+    eAppointment --- aAppRoomFk
+    eAppointment --- aAppDate
+    eAppointment --- aAppStatus
+
+    %% Payment
+    ePayment --- aPayPk
+    ePayment --- aPayAppFk
+    ePayment --- aPayAmt
+    ePayment --- aPayDate
+    ePayment --- aPayMethod
+    ePayment --- aPayStatus
+
+    %% User
+    eUser --- aUserPk
+    eUser --- aUserUname
+    eUser --- aUserPwd
+    eUser --- aUserRole
+    eUser --- aUserType
+    eUser --- aUserId
+
+    %% Contact_Inquiry
+    eContact --- aConPk
+    eContact --- aConName
+    eContact --- aConEmail
+    eContact --- aConSubj
+    eContact --- aConMsg
+    eContact --- aConTime
+    eContact --- aConRes
+
+    %% Geo_Location
+    eGeo --- aGeoPk
+    eGeo --- aGeoLat
+    eGeo --- aGeoLon
+    eGeo --- aGeoAddr
+    eGeo --- aGeoType
+    eGeo --- aGeoId
+
+    %% Scan_Document
+    eScan --- aScanPk
+    eScan --- aScanPatFk
+    eScan --- aScanDocFk
+    eScan --- aScanFile
+    eScan --- aScanTime
+    eScan --- aScanDesc
+
+    %% ===== RELATIONSHIP CONNECTIONS =====
+    %% Hospital ─── contains ─── Department
+    eHospital -->|1| rContains
+    rContains -->|N| eDepartment
+
+    %% Department ─── has locations ─── Department_Location
+    eDepartment -->|1| rHasLoc
+    rHasLoc -->|N| eDeptLoc
+
+    %% Doctor ─── chaired by ─── Department
+    eDoctor -->|0..1| rChaired
+    rChaired -->|1| eDepartment
+
+    %% Department ─── employs ─── Doctor
+    eDepartment -->|1| rEmploys
+    rEmploys -->|N| eDoctor
+
+    %% Doctor ─── treats ─── Patient
+    eDoctor -->|M| rTreatsRel
+    rTreatsRel -->|N| ePatient
+
+    %% Doctor ─── writes ─── Prescription
+    eDoctor -->|1| rWrites
+    rWrites -->|N| ePrescription
+
+    %% Patient ─── receives ─── Prescription
+    ePatient -->|1| rReceives
+    rReceives -->|N| ePrescription
+
+    %% Prescription ─── includes ─── Medication
+    ePrescription -->|M| rIncludes
+    rIncludes -->|N| eMedication
+
+    %% Hospital ─── contains ─── Room
+    eHospital -->|1| rContainsRoom
+    rContainsRoom -->|N| eRoom
+
+    %% Room ─── assigned to ─── Appointment
+    eRoom -->|1| rAssigned
+    rAssigned -->|N| eAppointment
+
+    %% Patient ─── books ─── Appointment
+    ePatient -->|1| rBooks
+    rBooks -->|N| eAppointment
+
+    %% Doctor ─── scheduled with ─── Appointment
+    eDoctor -->|1| rSched
+    rSched -->|N| eAppointment
+
+    %% Appointment ─── has payment ─── Payment
+    eAppointment -->|1| rHasPay
+    rHasPay -->|1| ePayment
+
+    %% Patient ─── has scans ─── Scan_Document
+    ePatient -->|1| rHasScan
+    rHasScan -->|N| eScan
+
+    %% Doctor ─── uploads ─── Scan_Document
+    eDoctor -->|1| rUploads
+    rUploads -->|N| eScan

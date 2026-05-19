@@ -1,0 +1,27 @@
+flowchart TD
+    classDef entity fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+    classDef attr fill:#fff9c4,stroke:#fbc02d,stroke-width:1px,color:#000
+
+    eDoctor[DOCTOR]:::entity
+
+    aPk([ssn PK]):::attr
+    aName([name]):::attr
+    aSex([sex]):::attr
+    aBdate([birth_date]):::attr
+    aMajor([major_area]):::attr
+    aDegree([degree]):::attr
+    aDeptFk([department_code FK]):::attr
+    aJoin([join_date]):::attr
+    aEmail([email]):::attr
+    aPhone([phone]):::attr
+
+    eDoctor --- aPk
+    eDoctor --- aName
+    eDoctor --- aSex
+    eDoctor --- aBdate
+    eDoctor --- aMajor
+    eDoctor --- aDegree
+    eDoctor --- aDeptFk
+    eDoctor --- aJoin
+    eDoctor --- aEmail
+    eDoctor --- aPhone

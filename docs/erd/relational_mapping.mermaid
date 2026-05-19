@@ -1,0 +1,68 @@
+flowchart LR
+    classDef erEntity fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+    classDef relTable fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000
+    classDef junction fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+    classDef ruleCard fill:#f3e5f5,stroke:#6a1b9a,stroke-width:1px,stroke-dasharray: 5 5,color:#000
+
+    subgraph ER["ER Model"]
+        erPatient(Patient):::erEntity
+        erHospital(Hospital):::erEntity
+        erDepartment(Department):::erEntity
+        erDeptLoc(Dept_Location):::erEntity
+        erDoctor(Doctor):::erEntity
+        erTreats(Treats):::erEntity
+        erPrescription(Prescription):::erEntity
+        erMedication(Medication):::erEntity
+        erPresMed(Prescription_Medication):::erEntity
+        erRoom(Room):::erEntity
+        erAppointment(Appointment):::erEntity
+        erPayment(Payment):::erEntity
+        erUser(User):::erEntity
+        erContact(Contact_Inquiry):::erEntity
+        erGeo(Geo_Location):::erEntity
+        erScan(Scan_Document):::erEntity
+    end
+
+    subgraph Relational["Relational Tables"]
+        tPatient[Patient]:::relTable
+        tHospital[Hospital]:::relTable
+        tDepartment[Department]:::relTable
+        tDeptLoc[Department_Location]:::relTable
+        tDoctor[Doctor]:::relTable
+        tTreats[Treats]:::junction
+        tPrescription[Prescription]:::relTable
+        tMedication[Medication]:::relTable
+        tPresMed[Prescription_Medication]:::junction
+        tRoom[Room]:::relTable
+        tAppointment[Appointment]:::relTable
+        tPayment[Payment]:::relTable
+        tUser[User]:::relTable
+        tContact[Contact_Inquiry]:::relTable
+        tGeo[Geo_Location]:::relTable
+        tScan[Scan_Document]:::relTable
+    end
+
+    subgraph Rules["Mapping Rules"]
+        r1[Strong Entity → Direct Table]:::ruleCard
+        r2[Weak Entity → Owner PK + Partial Key]:::ruleCard
+        r3[M:N Relationship → Junction Table]:::ruleCard
+        r4[1:N Relationship → FK on N-side]:::ruleCard
+        r5[1:1 Relationship → FK + UNIQUE]:::ruleCard
+    end
+
+    erPatient --> tPatient
+    erHospital --> tHospital
+    erDepartment --> tDepartment
+    erDeptLoc --> tDeptLoc
+    erDoctor --> tDoctor
+    erTreats --> tTreats
+    erPrescription --> tPrescription
+    erMedication --> tMedication
+    erPresMed --> tPresMed
+    erRoom --> tRoom
+    erAppointment --> tAppointment
+    erPayment --> tPayment
+    erUser --> tUser
+    erContact --> tContact
+    erGeo --> tGeo
+    erScan --> tScan
