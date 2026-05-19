@@ -19,6 +19,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 | birthdate | DATE | | NOT NULL |
 | sex | CHAR(1) | | NOT NULL, CHECK (IN 'M','F') |
 | medical_history | TEXT | | |
+| admission_date | DATE | | NOT NULL |
 | blood_pressure | VARCHAR(20) | | (embedded vital) |
 | heart_rate | INTEGER | | CHECK (> 0) |
 | temperature | DECIMAL(4,1) | | (embedded vital) |
@@ -43,11 +44,8 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 |-----------|--------|-----|-------------|
 | location_id | INTEGER | PK | GENERATED ALWAYS AS IDENTITY |
 | hospital_id | INTEGER | FK → Hospital | NOT NULL |
-| address | VARCHAR(200) | | NOT NULL |
-| city | VARCHAR(100) | | NOT NULL |
-| state | VARCHAR(100) | | |
-| zip | VARCHAR(20) | | |
-| country | VARCHAR(100) | | NOT NULL |
+| latitude | DECIMAL(10,7) | | NOT NULL |
+| longitude | DECIMAL(10,7) | | NOT NULL |
 
 ---
 
@@ -122,13 +120,13 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 
 ---
 
-### Prescription_Medication (M:N, with directions)
+### Prescription_Medication (M:N)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
 | prescription_id | INTEGER | PK, FK → Prescription | NOT NULL, ON DELETE CASCADE |
 | medication_id | INTEGER | PK, FK → Medication | NOT NULL, ON DELETE RESTRICT |
-| directions | TEXT | | NOT NULL |
+| times_per_day | INTEGER | | NOT NULL, CHECK (> 0) |
 | dose | VARCHAR(50) | | NOT NULL |
 
 ---
@@ -143,6 +141,8 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 | room_type | VARCHAR(50) | | NOT NULL, CHECK (IN 'OR','PACU','ICU','Ward','Clinic') |
 | or_type | VARCHAR(50) | | CHECK (IN 'general','cardiac','hybrid','robotic') |
 | has_robot | BOOLEAN | | DEFAULT FALSE |
+| has_c_arm | BOOLEAN | | DEFAULT FALSE |
+| laminar_flow | BOOLEAN | | DEFAULT FALSE |
 | | | | CHECK ((room_type='OR' AND or_type IS NOT NULL) OR (room_type!='OR' AND or_type IS NULL)) |
 
 ---
@@ -193,7 +193,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
 | payment_id | INTEGER | PK | GENERATED ALWAYS AS IDENTITY |
-| patient_number | VARCHAR(20) | FK → Patient | NOT NULL |
+| appointment_id | INTEGER | FK → Appointment (UNIQUE) | NOT NULL |
 | amount | DECIMAL(10,2) | | NOT NULL |
 | payment_date | TIMESTAMP | | NOT NULL, DEFAULT CURRENT_TIMESTAMP |
 | payment_type | VARCHAR(20) | | NOT NULL, CHECK (IN 'register','pay','refund') |
@@ -273,7 +273,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 
 | Entity 1 | Card. | Relationship | Card. | Entity 2 | Detail |
 |----------|-------|-------------|-------|----------|--------|
-| Hospital | 1 | has geo locations | N | Geo_Location | location FK |
+| Hospital | 1 | has geo locations | N | Geo_Location | hospital_id FK |
 | Hospital | 1 | contains | N | Department | hospital_id FK |
 | Department | 1 | has locations | N | Department_Location | composite PK |
 | Department | 1 | employs | N | Doctor | department_code FK |
@@ -291,7 +291,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 | Patient | 1 | books | N | Appointment | patient_number FK |
 | Doctor | 1 | runs | N | Appointment | doctor_id FK |
 | Appointment | 1 | relates to | 0..1 | Surgery_Case | case_id FK (ON DELETE SET NULL) |
-| Patient | 1 | makes | N | Payment | patient_number FK |
+| Appointment | 1 | has | 1 | Payment | appointment_id FK (UNIQUE) |
 | User | 0..1 | links to | 1 | Doctor | doctor_id FK |
 | User | 0..1 | links to | 1 | Patient | patient_number FK |
 | Doctor | 1 | uploads | N | Scan_Document | uploaded_by_doctor_id FK |
@@ -307,8 +307,6 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 | Department | belongs to → Hospital | **Total** | hospital_id NOT NULL |
 | Room | belongs to → Hospital | **Total** | hospital_id NOT NULL |
 | Room | or_type → room_type | **Total (conditional)** | NOT NULL when room_type='OR', NULL otherwise |
-| Surgery_Case | linked to → Admission | **Partial** | (removed — no Admission table) |
-| Surgery_Case | has → PACU_Record | **Partial** | (removed — no PACU_Record table) |
 | Surgery_Schedule | actual times | **Partial** | actual_start/actual_end nullable |
 
 ## 4. Subtype Discriminators
