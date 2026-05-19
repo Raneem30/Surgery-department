@@ -1,5 +1,5 @@
 -- ============================================
--- Seed Data: Surgery Department
+-- Seed Data: Surgery Department — OR Module
 -- ============================================
 
 -- Hospitals
@@ -30,13 +30,13 @@ INSERT INTO Department_Location (department_code, location) VALUES
     ('SURG-CAI', 'Emergency Wing, Ground Floor'),
     ('SURG-ALX', 'Block A, 2nd Floor');
 
--- Patients
-INSERT INTO Patient (patient_number, ssn, name, address, phone, birthdate, sex, medical_history, blood_pressure, heart_rate, temperature, admission_date) VALUES
-    ('P001', '28501101234580', 'Ali Zayed', '12 Tahrir St, Cairo', '01211111111', '1985-01-10', 'M', 'Appendicitis', '120/80', 72, 37.2, '2026-05-01'),
-    ('P002', '29207071234581', 'Fatima Noor', '45 Garden City, Cairo', '01222222222', '1992-07-07', 'F', 'Gallstones', '130/85', 78, 37.5, '2026-05-02'),
-    ('P003', '27805151234582', 'Hassan Omar', '78 Nasr City, Cairo', '01233333333', '1978-05-15', 'M', 'Hernia', '140/90', 80, 36.9, '2026-05-03'),
-    ('P004', '30012121234583', 'Layla Samir', '22 Smouha, Alexandria', '01244444444', '2000-12-12', 'F', 'ACL tear', '115/75', 68, 37.0, '2026-05-04'),
-    ('P005', '29503181234584', 'Youssef Nabil', '5 Stanley Bay, Alexandria', '01255555555', '1995-03-18', 'M', 'Kidney stones', '125/82', 75, 37.3, '2026-05-05');
+-- Patients (no vitals or admission_date here)
+INSERT INTO Patient (patient_number, ssn, name, address, phone, birthdate, sex, medical_history) VALUES
+    ('P001', '28501101234580', 'Ali Zayed', '12 Tahrir St, Cairo', '01211111111', '1985-01-10', 'M', 'Appendicitis'),
+    ('P002', '29207071234581', 'Fatima Noor', '45 Garden City, Cairo', '01222222222', '1992-07-07', 'F', 'Gallstones'),
+    ('P003', '27805151234582', 'Hassan Omar', '78 Nasr City, Cairo', '01233333333', '1978-05-15', 'M', 'Hernia'),
+    ('P004', '30012121234583', 'Layla Samir', '22 Smouha, Alexandria', '01244444444', '2000-12-12', 'F', 'ACL tear'),
+    ('P005', '29503181234584', 'Youssef Nabil', '5 Stanley Bay, Alexandria', '01255555555', '1995-03-18', 'M', 'Kidney stones');
 
 -- Treats (Doctor-Patient)
 INSERT INTO Treats (patient_number, doctor_ssn, hours_per_week) VALUES
@@ -45,7 +45,7 @@ INSERT INTO Treats (patient_number, doctor_ssn, hours_per_week) VALUES
     ('P003', '29508081234569', 5),
     ('P004', '30011221234570', 6),
     ('P005', '29203031234571', 4),
-    ('P001', '28905121234568', 2); -- Patient under two doctors
+    ('P001', '28905121234568', 2);
 
 -- Medications
 INSERT INTO Medication (name) VALUES
@@ -74,56 +74,104 @@ INSERT INTO Prescription_Medication (prescription_id, medication_id, times_per_d
     (4, 4, 1, '10mg'),
     (5, 1, 2, '500mg');
 
--- Rooms
-INSERT INTO Room (hospital_id, room_number, room_type, is_available) VALUES
-    (1, 'OR-101', 'Operating Room', TRUE),
-    (1, 'OR-102', 'Operating Room', TRUE),
-    (1, 'RR-201', 'Recovery Room', TRUE),
-    (1, 'RR-202', 'Recovery Room', TRUE),
-    (1, 'ICU-301', 'ICU', TRUE),
-    (2, 'OR-101', 'Operating Room', TRUE),
-    (2, 'RR-201', 'Recovery Room', TRUE),
-    (2, 'ICU-301', 'ICU', TRUE);
+-- Rooms (ORs with surgery-specific attributes)
+INSERT INTO Room (hospital_id, room_number, room_type, or_type, has_robot, has_c_arm, laminar_flow) VALUES
+    (1, 'OR-101', 'OR', 'general',   FALSE, TRUE,  TRUE),
+    (1, 'OR-102', 'OR', 'cardiac',   FALSE, TRUE,  TRUE),
+    (1, 'OR-103', 'OR', 'robotic',   TRUE,  TRUE,  TRUE),
+    (1, 'OR-104', 'OR', 'hybrid',    TRUE,  TRUE,  TRUE),
+    (1, 'PACU-01', 'PACU', NULL,     FALSE, FALSE, FALSE),
+    (1, 'ICU-301', 'ICU', NULL,      FALSE, FALSE, FALSE),
+    (1, 'W-401',   'Ward', NULL,     FALSE, FALSE, FALSE),
+    (1, 'CL-501',  'Clinic', NULL,   FALSE, FALSE, FALSE);
 
--- Appointments
-INSERT INTO Appointment (patient_number, doctor_ssn, room_id, appointment_date, status, reason) VALUES
-    ('P001', '29801011234567', 1, '2026-05-10 09:00:00', 'scheduled', 'Appendectomy'),
-    ('P002', '28905121234568', 2, '2026-05-11 10:00:00', 'scheduled', 'Cholecystectomy'),
-    ('P003', '29508081234569', 3, '2026-05-12 11:00:00', 'scheduled', 'Hernia repair'),
-    ('P004', '30011221234570', 6, '2026-05-13 14:00:00', 'scheduled', 'ACL reconstruction'),
-    ('P005', '29203031234571', 7, '2026-05-14 09:30:00', 'scheduled', 'Lithotripsy'),
-    ('P001', '28905121234568', NULL, '2026-05-15 15:00:00', 'cancelled', 'Follow-up cancelled');
+-- Procedures (CPT-like codes)
+INSERT INTO Procedure_ (procedure_code, name, standard_duration_minutes, required_room_type, specialty) VALUES
+    ('CPT-47562', 'Laparoscopic Cholecystectomy',        90,  'general', 'General Surgery'),
+    ('CPT-44970', 'Laparoscopic Appendectomy',           60,  'general', 'General Surgery'),
+    ('CPT-49505', 'Inguinal Hernia Repair',              75,  'general', 'General Surgery'),
+    ('CPT-33426', 'Mitral Valve Repair',                 240, 'cardiac', 'Cardiothoracic Surgery'),
+    ('CPT-33405', 'Aortic Valve Replacement',            210, 'cardiac', 'Cardiothoracic Surgery'),
+    ('CPT-27447', 'Total Knee Arthroplasty',             120, 'robotic', 'Orthopedic Surgery'),
+    ('CPT-63030', 'Lumbar Laminectomy',                  120, 'general', 'Neurosurgery'),
+    ('CPT-61781', 'Deep Brain Stimulator Implant',       180, 'robotic', 'Neurosurgery'),
+    ('CPT-44140', 'Partial Colectomy',                   150, 'general', 'General Surgery');
 
--- Payments
-INSERT INTO Payment (appointment_id, amount, payment_date, payment_method, status) VALUES
-    (1, 5000.00, '2026-05-08 12:00:00', 'Credit Card', 'paid'),
-    (2, 8000.00, '2026-05-09 14:00:00', 'Bank Transfer', 'paid'),
-    (3, 4000.00, '2026-05-10 10:00:00', 'Cash', 'paid'),
-    (4, 15000.00, '2026-05-11 09:00:00', 'Credit Card', 'paid'),
-    (5, 6000.00, '2026-05-12 11:00:00', 'Credit Card', 'paid'),
-    (6, 3000.00, '2026-05-14 10:00:00', 'Cash', 'refunded');
+-- Admissions
+INSERT INTO Admission (patient_number, admission_date, discharge_date, bed_number) VALUES
+    ('P001', '2026-05-01', '2026-05-03', 'W-401-A'),
+    ('P002', '2026-05-02', NULL,          'W-401-B'),
+    ('P003', '2026-05-03', NULL,          NULL);
 
--- Users
-INSERT INTO "User" (username, password_hash, role, person_type, person_id) VALUES
-    ('ali.zayed', 'hash_placeholder_001', 'patient', 'Patient', 'P001'),
-    ('fatima.noor', 'hash_placeholder_002', 'patient', 'Patient', 'P002'),
-    ('ahmed.hassan', 'hash_placeholder_003', 'doctor', 'Doctor', '29801011234567'),
-    ('mona.youssef', 'hash_placeholder_004', 'doctor', 'Doctor', '28905121234568'),
-    ('admin', 'hash_placeholder_admin', 'admin', NULL, NULL),
-    ('nurse.sara', 'hash_placeholder_005', 'nurse', NULL, NULL);
+-- Vital Signs
+INSERT INTO Vital_Sign (patient_number, recorded_at, blood_pressure, heart_rate, temperature, spo2, recorded_by_ssn) VALUES
+    ('P001', '2026-05-01 07:00:00', '120/80', 72, 37.2, 98, '29801011234567'),
+    ('P001', '2026-05-01 14:00:00', '118/78', 70, 37.0, 99, '29801011234567'),
+    ('P002', '2026-05-02 08:00:00', '130/85', 78, 37.5, 97, '28905121234568'),
+    ('P003', '2026-05-03 06:30:00', '140/90', 80, 36.9, 96, '29508081234569');
 
--- Contact Inquiries
-INSERT INTO Contact_Inquiry (name, email, subject, message, submitted_at, is_resolved) VALUES
-    ('Karim Adel', 'karim@example.com', 'Appointment inquiry', 'I would like to book a consultation for my father.', '2026-05-01 10:30:00', TRUE),
-    ('Nadia Samir', 'nadia@example.com', 'Billing question', 'I have a question about my recent payment.', '2026-05-03 15:45:00', FALSE);
+-- Surgery Cases
+INSERT INTO Surgery_Case (patient_number, procedure_code, priority, status, admission_id, cancel_reason) VALUES
+    ('P001', 'CPT-44970', 'elective',  'completed', 1, NULL),
+    ('P002', 'CPT-47562', 'elective',  'scheduled', 2, NULL),
+    ('P003', 'CPT-49505', 'elective',  'pre_op',    3, NULL),
+    ('P004', 'CPT-27447', 'elective',  'scheduled', NULL, NULL),
+    ('P005', 'CPT-44140', 'emergency', 'scheduled', NULL, NULL);
 
--- Geo Locations
-INSERT INTO Geo_Location (latitude, longitude, address, entity_type, entity_id) VALUES
-    (30.0444, 31.2357, 'Kasr Al-Ainy, Cairo', 'Hospital', 1),
-    (31.2001, 29.9187, 'Alexandria', 'Hospital', 2);
+-- Surgery Schedules
+INSERT INTO Surgery_Schedule (case_id, or_room_id, scheduled_start, scheduled_end, actual_start, actual_end) VALUES
+    (1, 1, '2026-05-01 08:00:00', '2026-05-01 09:00:00', '2026-05-01 08:05:00', '2026-05-01 08:55:00'),
+    (2, 1, '2026-05-11 08:00:00', '2026-05-11 09:30:00', NULL, NULL),
+    (3, 1, '2026-05-12 09:00:00', '2026-05-12 10:15:00', NULL, NULL),
+    (4, 3, '2026-05-13 10:00:00', '2026-05-13 12:00:00', NULL, NULL),
+    (5, 2, '2026-05-14 02:00:00', '2026-05-14 04:30:00', NULL, NULL);
 
--- Scan Documents
-INSERT INTO Scan_Document (patient_number, doctor_ssn, file_path, upload_date, description) VALUES
-    ('P001', '29801011234567', '/uploads/scans/p001_ct_scan.pdf', '2026-05-01 11:00:00', 'CT Scan - Abdomen'),
-    ('P002', '28905121234568', '/uploads/scans/p002_ultrasound.pdf', '2026-05-02 14:00:00', 'Ultrasound - Gallbladder'),
-    ('P003', '29508081234569', '/uploads/scans/p003_mri.pdf', '2026-05-03 09:00:00', 'MRI - Lower abdomen');
+-- Surgical Team Assignments
+INSERT INTO Surgical_Team_Assignment (case_id, doctor_ssn, role) VALUES
+    (1, '29801011234567', 'primary_surgeon'),
+    (1, '28905121234568', 'assistant'),
+    (1, '29508081234569', 'anesthesiologist'),
+    (2, '28905121234568', 'primary_surgeon'),
+    (2, '29801011234567', 'assistant'),
+    (3, '29508081234569', 'primary_surgeon'),
+    (4, '30011221234570', 'primary_surgeon'),
+    (5, '29801011234567', 'primary_surgeon');
+
+-- IntraOp Events
+INSERT INTO IntraOp_Event (case_id, event_time, event_type, notes) VALUES
+    (1, '2026-05-01 08:10:00', 'incision', 'Standard laparoscopy incision'),
+    (1, '2026-05-01 08:15:00', 'biopsy', 'Appendix visualized, inflamed'),
+    (1, '2026-05-01 08:40:00', 'closure', 'Port sites closed, sterile dressing applied');
+
+-- Specimens
+INSERT INTO Specimen (case_id, laterality, tissue_type, container_type, pathology_request_id) VALUES
+    (1, NULL, 'Appendix', 'Formalin jar', 'PATH-2026-001');
+
+-- Implant Devices
+INSERT INTO Implant_Device (case_id, device_type, serial_number, lot_number, manufacturer) VALUES
+    (4, 'Total Knee Prosthesis', 'TKA-2026-0042', 'LOT-42-2026', 'Zimmer Biomet');
+
+-- PACU Records
+INSERT INTO PACU_Record (case_id, arrival_time, discharge_time, aldrete_score, pain_score, complications) VALUES
+    (1, '2026-05-01 09:00:00', '2026-05-01 10:30:00', 9, 3, NULL);
+
+-- Surgical Counts
+INSERT INTO Surgical_Count (case_id, count_type, pre_count, post_count, verified_by_nurse_ssn, verified_at) VALUES
+    (1, 'sponge',    10, 10, '28905121234568', '2026-05-01 08:05:00'),
+    (1, 'needle',    4,  4,  '28905121234568', '2026-05-01 08:05:00'),
+    (1, 'instrument', 12, 12, '28905121234568', '2026-05-01 08:50:00');
+
+-- Clinic Appointments (pre-op / post-op)
+INSERT INTO Clinic_Appointment (patient_number, doctor_ssn, room_id, appointment_date, status, reason, case_id) VALUES
+    ('P001', '29801011234567', 8, '2026-04-28 09:00:00', 'completed', 'Pre-op assessment', 1),
+    ('P001', '29801011234567', 8, '2026-05-05 10:00:00', 'scheduled', 'Post-op follow-up', 1),
+    ('P002', '28905121234568', 8, '2026-05-08 11:00:00', 'scheduled', 'Pre-op assessment', 2),
+    ('P003', '29508081234569', 8, '2026-05-09 14:00:00', 'scheduled', 'Pre-op assessment', 3);
+
+-- Scan Documents (with document_type)
+INSERT INTO Scan_Document (patient_number, doctor_ssn, file_path, upload_date, description, document_type) VALUES
+    ('P001', '29801011234567', '/uploads/scans/p001_ct_scan.pdf',  '2026-04-28 10:00:00', 'CT Scan - Abdomen', 'imaging'),
+    ('P001', '29801011234567', '/uploads/scans/p001_consent.pdf',  '2026-04-28 11:00:00', 'Surgery consent form', 'consent'),
+    ('P002', '28905121234568', '/uploads/scans/p002_ultrasound.pdf', '2026-05-02 14:00:00', 'Ultrasound - Gallbladder', 'imaging'),
+    ('P003', '29508081234569', '/uploads/scans/p003_mri.pdf',       '2026-05-03 09:00:00', 'MRI - Lower abdomen', 'imaging'),
+    ('P001', '29801011234567', '/uploads/scans/p001_op_report.pdf', '2026-05-01 15:00:00', 'Operative Report - Appendectomy', 'operative_report');

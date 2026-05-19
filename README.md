@@ -1,48 +1,44 @@
-# Surgery Department - Hospital Information System
+# Surgery Department — Operating Theater Module
 
 ## Project Overview
-A Hospital Information System (HIS) for the **Surgery Department** — managing patients, surgeons, operating rooms, appointments, prescriptions, and administrative reporting.
+A specialized **Operating Theater database** for the Surgery Department. Manages surgical cases, OR scheduling with overlap prevention, surgical teams, intraoperative events, implants, specimens, PACU recovery, and safety counts.
 
 ---
 
 ## Phase 1: Database Design & Implementation (May 16)
 
-### Deliverable 1: Entity-Relationship Diagram (ERD)
+### Deliverable 1: Database Plan
 
 | File | Description |
 |------|-------------|
-| `docs/erd/ERD.puml` | Original PlantUML ERD |
-| `docs/erd/plan.md` | Comprehensive database plan — entities, attributes, domains, keys, constraints, relationships, completeness & disjointness constraints, functional requirements, normalization |
+| `docs/erd/plan.md` | Comprehensive database plan — 23 tables, attributes, domains, keys, constraints, relationships, completeness constraints, functional requirements, normalization |
+| `docs/erd/ERD.puml` | Original PlantUML ERD (legacy) |
+| `docs/erd/keys_table.md` | PK/FK reference — all primary keys, foreign keys, composite keys, unique constraints, and indexes |
 
-**Entities identified:**
-- **Patient** — core entity with personal data, medical history, vital signs, admission date
-- **Hospital** — contains departments, owns rooms
-- **Department** — Surgery Dept, has locations, headed by a chairman (doctor)
-- **Department_Location** — weak entity, multi-location departments
-- **Doctor** — surgeon with specialization, degree, joins one department
-- **Treats** (M:N) — which doctors treat which patients, with hours/week tracking
-- **Prescription** — doctor writes for patient, includes medication directions
-- **Medication** — medication catalog
-- **Prescription_Medication** (M:N) — link table with dose & frequency
-- **Room** — operating rooms, recovery rooms, regular rooms
-- **Appointment** — patient books with doctor, linked to a room
-- **Payment** — tracks appointment payments and refunds
-- **User** — login accounts for patients, doctors, nurses, admins
-- **Contact_Inquiry** — visitor contact form submissions
-- **Geo_Location** — geographic coordinates for hospitals/departments
-- **Scan_Document** — patient scans, X-rays, MRI uploads
+**Entities (23 tables):**
+- **Core:** Patient, Hospital, Department, Department_Location, Doctor
+- **Clinical:** Treats, Prescription, Medication, Prescription_Medication, Vital_Sign, Admission, Scan_Document
+- **Surgery:** Procedure, Surgery_Case, Surgery_Schedule, Surgical_Team_Assignment, IntraOp_Event
+- **Peri-op:** Specimen, Implant_Device, PACU_Record, Surgical_Count
+- **Clinic:** Clinic_Appointment (pre-op/post-op visits)
 
-### Deliverable 2: Relational Schema Mapping
-**Files:**
-- `docs/erd/plan.md` — complete database plan including schema, constraints, and mapping
-- `docs/erd/keys_table.md` — comprehensive PK/FK reference table with composite keys, polymorphic refs, and indexes
+**Removed (general clinic tables):** Geo_Location, Contact_Inquiry, User, Payment, Appointment (renamed)
 
-### Deliverable 3: SQL Implementation
-**Files:** `sql/schema.sql`, `sql/seed.sql`, `sql/queries.sql`
+### Deliverable 2: SQL Implementation
 
-- `schema.sql` — DDL with CREATE TABLE statements, constraints, indexes
-- `seed.sql` — realistic sample data for Surgery Department
-- `queries.sql` — complex queries for reports (appointments, room allocation, etc.)
+| File | Description |
+|------|-------------|
+| `sql/schema.sql` | DDL — 23 CREATE TABLE statements, CHECK/FK/UNIQUE constraints, `EXCLUDE USING gist` for OR overlap prevention, 27 indexes |
+| `sql/seed.sql` | Realistic seed data — hospitals, ORs (with robot/C-arm/flow), procedures (CPT codes), surgery cases, schedules, teams, events, implants, specimens, PACU records, counts |
+| `sql/queries.sql` | 15 surgery-specific queries — daily OR schedule, implant traceability, count mismatch alerts, PACU recovery times, complication rates, OR utilization, emergency response time, surgeon workload, turnaround time |
+
+### Key Features
+- **OR Overlap Prevention** — `EXCLUDE USING gist (or_room_id WITH =, tstzrange(scheduled_start, scheduled_end) WITH &&)`
+- **Safety** — Surgical_Count with pre/post discrepancy alerts
+- **Traceability** — Implant_Device with serial/lot/manufacturer tracking
+- **Peri-operative Workflow** — Surgery_Case status pipeline (scheduled → pre_op → in_or → in_pacu → completed)
+- **PACU Recovery** — Aldrete and pain score tracking
+- **Specimen Tracking** — Laterality, tissue type, container, pathology request ID
 
 ---
 
@@ -50,27 +46,11 @@ A Hospital Information System (HIS) for the **Surgery Department** — managing 
 
 ### Tech Stack
 - **Backend:** Spring Boot (Java)
-- **Database:** PostgreSQL / MySQL
+- **Database:** PostgreSQL (with btree_gist extension)
 - **Frontend:** Thymeleaf or React (TBD)
 - **Build Tool:** Maven
 
-### Features to Implement
-
-| # | Feature | Details |
-|---|---------|---------|
-| 1 | Home page | Public landing page for visitors |
-| 2 | User roles & auth | Patients, Doctors, Nurses, Admins — registration + login |
-| 3 | User profiles | Doctor profile (schedule, specialization), Patient profile (history, upcoming surgeries) |
-| 4 | File uploads | Patient scans, X-rays, MRI uploads |
-| 5 | Appointments | Booking system between surgeons and patients |
-| 6 | Contact forms | Inquiry/submission system for visitors |
-| 7 | Admin dashboard | Statistical analysis: appointment reports, room utilization, patient demographics |
-| 8 | Room management | Doctor reserves operating/recovery rooms for procedures |
-| 9 | Payment & refunds | Patients pay for appointments, cancel for refund |
-| 10 | Geo-location | Find nearest hospital/surgery center |
-
 ### Presentation
-- Live demo of the application
-- ERD walkthrough
-- Key SQL queries demonstration
-- Architecture overview
+- Schema walkthrough (23 tables, 27 indexes, exclusion constraint)
+- Key surgery queries demonstration
+- OR scheduling with overlap prevention explanation

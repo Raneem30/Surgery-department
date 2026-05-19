@@ -1,0 +1,185 @@
+@startuml
+' hide the spot
+' hide circle
+
+' === Entities ===
+entity Patient {
+  *patient_number: VARCHAR(20) <<PK>>
+  --
+  *ssn: VARCHAR(14) <<UNIQUE>>
+  *name: VARCHAR(100)
+  address: VARCHAR(200)
+  phone: VARCHAR(20)
+  *birthdate: DATE
+  *sex: CHAR(1)
+  medical_history: TEXT
+  blood_pressure: VARCHAR(20)
+  heart_rate: INTEGER
+  temperature: DECIMAL(4,1)
+  *admission_date: DATE
+}
+
+entity Hospital {
+  *hospital_id: INTEGER <<PK>>
+  --
+  *name: VARCHAR(100)
+  *address: VARCHAR(200)
+}
+
+entity Department {
+  *department_code: VARCHAR(10) <<PK>>
+  --
+  *name: VARCHAR(100) <<UNIQUE>>
+  *hospital_id: INTEGER <<FK>>
+  chairman_ssn: VARCHAR(14) <<FK>>
+  chair_start_date: DATE
+}
+
+entity Department_Location {
+  *department_code: VARCHAR(10) <<FK>>
+  *location: VARCHAR(200)
+}
+
+entity Doctor {
+  *ssn: VARCHAR(14) <<PK>>
+  --
+  *name: VARCHAR(100)
+  *sex: CHAR(1)
+  *birth_date: DATE
+  *major_area: VARCHAR(100)
+  *degree: VARCHAR(50)
+  *department_code: VARCHAR(10) <<FK>>
+  *join_date: DATE
+}
+
+entity Treats {
+  *patient_number: VARCHAR(20) <<FK>>
+  *doctor_ssn: VARCHAR(14) <<FK>>
+  --
+  hours_per_week: INTEGER
+}
+
+entity Prescription {
+  *prescription_id: INTEGER <<PK>>
+  --
+  *doctor_ssn: VARCHAR(14) <<FK>>
+  *patient_number: VARCHAR(20) <<FK>>
+  *prescription_date: DATE
+  *start_date: DATE
+  *end_date: DATE
+}
+
+entity Medication {
+  *medication_id: INTEGER <<PK>>
+  --
+  *name: VARCHAR(100)
+}
+
+entity Prescription_Medication {
+  *prescription_id: INTEGER <<FK>>
+  *medication_id: INTEGER <<FK>>
+  --
+  *times_per_day: INTEGER
+  *dose: VARCHAR(50)
+}
+
+entity Room {
+  *room_id: INTEGER <<PK>>
+  --
+  *hospital_id: INTEGER <<FK>>
+  *room_number: VARCHAR(20)
+  *room_type: VARCHAR(50)
+  is_available: BOOLEAN
+}
+
+entity Appointment {
+  *appointment_id: INTEGER <<PK>>
+  --
+  *patient_number: VARCHAR(20) <<FK>>
+  *doctor_ssn: VARCHAR(14) <<FK>>
+  room_id: INTEGER <<FK>>
+  *appointment_date: TIMESTAMP
+  *status: VARCHAR(20)
+}
+
+entity Payment {
+  *payment_id: INTEGER <<PK>>
+  --
+  *appointment_id: INTEGER <<FK>>
+  *amount: DECIMAL(10,2)
+  *payment_date: TIMESTAMP
+  *payment_method: VARCHAR(30)
+  *status: VARCHAR(20)
+}
+
+entity "User" as User {
+  *user_id: INTEGER <<PK>>
+  --
+  *username: VARCHAR(50) <<UNIQUE>>
+  *password_hash: VARCHAR(255)
+  *role: VARCHAR(20)
+  person_type: VARCHAR(20)
+  person_id: VARCHAR(20)
+}
+
+entity Contact_Inquiry {
+  *inquiry_id: INTEGER <<PK>>
+  --
+  *name: VARCHAR(100)
+  *email: VARCHAR(100)
+  *subject: VARCHAR(200)
+  *message: TEXT
+  *submitted_at: TIMESTAMP
+  is_resolved: BOOLEAN
+}
+
+entity Geo_Location {
+  *location_id: INTEGER <<PK>>
+  --
+  *latitude: DECIMAL(10,7)
+  *longitude: DECIMAL(10,7)
+  *address: VARCHAR(200)
+  entity_type: VARCHAR(30)
+  entity_id: INTEGER
+}
+
+entity Scan_Document {
+  *scan_id: INTEGER <<PK>>
+  --
+  *patient_number: VARCHAR(20) <<FK>>
+  *doctor_ssn: VARCHAR(14) <<FK>>
+  *file_path: VARCHAR(500)
+  *upload_date: TIMESTAMP
+  *description: VARCHAR(200)
+}
+
+' === Relationships ===
+
+Hospital ||--o{ Department : contains
+Department ||--o{ Department_Location : "has locations"
+Department }o--|| Doctor : "has chairman"
+Department ||--o{ Doctor : employs
+
+Doctor }o--o{ Patient : treats
+Treats )-- Doctor
+Treats )-- Patient
+
+Doctor ||--o{ Prescription : writes
+Patient ||--o{ Prescription : receives
+
+Prescription }o--o{ Medication : includes
+Prescription_Medication )-- Prescription
+Prescription_Medication )-- Medication
+
+Hospital ||--o{ Room : contains
+Room ||--o{ Appointment : "assigned to"
+
+Patient ||--o{ Appointment : books
+Doctor ||--o{ Appointment : "scheduled with"
+
+Appointment ||--|| Payment : has
+
+Patient ||--o{ Scan_Document : has
+Doctor ||--o{ Scan_Document : uploads
+
+@enduml
