@@ -1,0 +1,14 @@
+# Relationship: Treats
+
+```mermaid
+flowchart TD
+    classDef entity fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+    classDef attr fill:#fff9c4,stroke:#fbc02d,stroke-width:1px,color:#000
+
+    eTreats[TREATS]:::entity
+    aPatFk([patient_number PK FK]:::attr
+    aDocFk([doctor_ssn PK FK]:::attr
+    aHours([hours_per_week]:::attr
+
+    eTreats --- aPatFk & aDocFk & aHours
+```

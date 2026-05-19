@@ -8,31 +8,36 @@ A Hospital Information System (HIS) for the **Surgery Department** — managing 
 ## Phase 1: Database Design & Implementation (May 16)
 
 ### Deliverable 1: Entity-Relationship Diagram (ERD)
-**File:** `docs/ERD.puml` + `docs/ERD.md`
 
-Entities identified:
+| File | Description |
+|------|-------------|
+| `docs/erd/ERD.puml` | Original PlantUML ERD |
+| `docs/erd/erd_full.md` | Full system ERD (Mermaid flowchart TD) with all entities, attributes, relationships, and completeness/disjointness constraints |
+| `docs/erd/entities/` | Individual Mermaid entity diagrams (one per entity with full attribute listing) |
+
+**Entities identified:**
 - **Patient** — core entity with personal data, medical history, vital signs, admission date
 - **Hospital** — contains departments, owns rooms
 - **Department** — Surgery Dept, has locations, headed by a chairman (doctor)
+- **Department_Location** — weak entity, multi-location departments
 - **Doctor** — surgeon with specialization, degree, joins one department
-- **Treats** (relationship) — which doctors treat which patients, with hours/week tracking
+- **Treats** (M:N) — which doctors treat which patients, with hours/week tracking
 - **Prescription** — doctor writes for patient, includes medication directions
 - **Medication** — medication catalog
-- **Prescription_Medication** — link table with dose & frequency
+- **Prescription_Medication** (M:N) — link table with dose & frequency
 - **Room** — operating rooms, recovery rooms, regular rooms
 - **Appointment** — patient books with doctor, linked to a room
 - **Payment** — tracks appointment payments and refunds
 - **User** — login accounts for patients, doctors, nurses, admins
 - **Contact_Inquiry** — visitor contact form submissions
 - **Geo_Location** — geographic coordinates for hospitals/departments
+- **Scan_Document** — patient scans, X-rays, MRI uploads
 
 ### Deliverable 2: Relational Schema Mapping
-**File:** `docs/relational_schema.md`
-
-Maps each entity and relationship to relational tables with:
-- Primary keys, foreign keys, attribute domains
-- Normalization (3NF)
-- Cardinality constraints
+**Files:**
+- `docs/erd/relational_schema.md` — detailed column-level mapping (3NF, domains, constraints)
+- `docs/erd/relational_mapping.md` — ER-to-relational mapping diagram (Mermaid flowchart) with rules and normalization notes
+- `docs/erd/keys_table.md` — comprehensive PK/FK reference table with composite keys, polymorphic refs, and indexes
 
 ### Deliverable 3: SQL Implementation
 **Files:** `sql/schema.sql`, `sql/seed.sql`, `sql/queries.sql`
