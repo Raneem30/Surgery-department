@@ -1,73 +1,54 @@
-# Surgery Department - Hospital Information System
+# Surgery Department
 
 ## Project Overview
-A Hospital Information System (HIS) for the **Surgery Department** — managing patients, surgeons, operating rooms, appointments, prescriptions, and administrative reporting.
+A specialized database for the Surgery Department. Manages surgical cases, OR scheduling with overlap prevention, surgical teams, appointments, payments, and patient records.
 
 ---
 
-## Phase 1: Database Design & Implementation (May 16)
+## Phase 1: Database Design & Implementation 
 
-### Deliverable 1: Entity-Relationship Diagram (ERD)
-**File:** `docs/ERD.puml` + `docs/ERD.md`
+### Deliverable 1: Database Plan
 
-Entities identified:
-- **Patient** — core entity with personal data, medical history, vital signs, admission date
-- **Hospital** — contains departments, owns rooms
-- **Department** — Surgery Dept, has locations, headed by a chairman (doctor)
-- **Doctor** — surgeon with specialization, degree, joins one department
-- **Treats** (relationship) — which doctors treat which patients, with hours/week tracking
-- **Prescription** — doctor writes for patient, includes medication directions
-- **Medication** — medication catalog
-- **Prescription_Medication** — link table with dose & frequency
-- **Room** — operating rooms, recovery rooms, regular rooms
-- **Appointment** — patient books with doctor, linked to a room
-- **Payment** — tracks appointment payments and refunds
-- **User** — login accounts for patients, doctors, nurses, admins
-- **Contact_Inquiry** — visitor contact form submissions
-- **Geo_Location** — geographic coordinates for hospitals/departments
+| File | Description |
+|------|-------------|
+| `docs/erd/plan.md` | Comprehensive database plan — 20 tables, attributes, domains, keys, constraints, relationships, completeness constraints, functional requirements, normalization |
+| `docs/erd/keys_table.md` | PK/FK reference — all primary keys, foreign keys, composite keys, unique constraints, and indexes |
 
-### Deliverable 2: Relational Schema Mapping
-**File:** `docs/relational_schema.md`
+**Entities (20 tables):**
+- **Core & Location:** Patient (with embedded vitals), Hospital, Geo_Location, Department, Department_Location
+- **Personnel:** Doctor
+- **Clinical:** Treats, Prescription, Medication, Prescription_Medication, Scan_Document
+- **Scheduling & Finance:** Appointment, Payment, Contact_Inquiry
+- **Access:** User
+- **Facilities:** Room (enhanced for Surgery — OR rooms)
+- **Surgery:** Surgical_Procedure, Surgery_Case, Surgery_Schedule (with OR overlap prevention), Surgical_Team_Assignment
 
-Maps each entity and relationship to relational tables with:
-- Primary keys, foreign keys, attribute domains
-- Normalization (3NF)
-- Cardinality constraints
+### Deliverable 2: SQL Implementation
 
-### Deliverable 3: SQL Implementation
-**Files:** `sql/schema.sql`, `sql/seed.sql`, `sql/queries.sql`
+| File | Description |
+|------|-------------|
+| `sql/schema.sql` | DDL — 20 CREATE TABLE statements, CHECK/FK/UNIQUE constraints, `EXCLUDE USING gist` for OR overlap prevention, 28 indexes |
+| `sql/seed.sql` | Realistic seed data — hospitals, geo locations, departments, doctors, patients (with vitals), medications, prescriptions, rooms, procedures (CPT codes), surgery cases, schedules, team assignments, appointments, payments, users, contact inquiries, scan documents |
+| `sql/queries.sql` | 10 surgery-specific queries — daily OR schedule, surgeries by status, OR utilization, doctor workload, procedure duration vs standard, cancelled surgeries, team role distribution, OR turnaround time, patient payment history, upcoming appointments |
 
-- `schema.sql` — DDL with CREATE TABLE statements, constraints, indexes
-- `seed.sql` — realistic sample data for Surgery Department
-- `queries.sql` — complex queries for reports (appointments, room allocation, etc.)
+### Key Features
+- **OR Overlap Prevention** — `EXCLUDE USING gist (or_room_id WITH =, tstzrange(scheduled_start, scheduled_end) WITH &&)`
+- **Patient Vitals Embedded** — blood pressure, heart rate, temperature, SpO2 stored directly in Patient table
+- **Peri-operative Workflow** — Surgery_Case status pipeline (scheduled → pre_op → in_or → in_pacu → completed)
+- **Payment Lifecycle** — Register/pay/refund per appointment
+- **Role-based Access** — User table with admin/doctor/nurse/staff roles
 
 ---
 
-## Phase 2: Application Features & Presentation (May 23)
+## Phase 2: Application Features & Presentation
 
 ### Tech Stack
 - **Backend:** Spring Boot (Java)
-- **Database:** PostgreSQL / MySQL
+- **Database:** PostgreSQL (with btree_gist extension)
 - **Frontend:** Thymeleaf or React (TBD)
 - **Build Tool:** Maven
 
-### Features to Implement
-
-| # | Feature | Details |
-|---|---------|---------|
-| 1 | Home page | Public landing page for visitors |
-| 2 | User roles & auth | Patients, Doctors, Nurses, Admins — registration + login |
-| 3 | User profiles | Doctor profile (schedule, specialization), Patient profile (history, upcoming surgeries) |
-| 4 | File uploads | Patient scans, X-rays, MRI uploads |
-| 5 | Appointments | Booking system between surgeons and patients |
-| 6 | Contact forms | Inquiry/submission system for visitors |
-| 7 | Admin dashboard | Statistical analysis: appointment reports, room utilization, patient demographics |
-| 8 | Room management | Doctor reserves operating/recovery rooms for procedures |
-| 9 | Payment & refunds | Patients pay for appointments, cancel for refund |
-| 10 | Geo-location | Find nearest hospital/surgery center |
-
 ### Presentation
-- Live demo of the application
-- ERD walkthrough
-- Key SQL queries demonstration
-- Architecture overview
+- Schema walkthrough (20 tables, 28 indexes, exclusion constraint)
+- Key surgery queries demonstration
+- OR scheduling with overlap prevention explanation
