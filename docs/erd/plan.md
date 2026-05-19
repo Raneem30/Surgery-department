@@ -1,13 +1,13 @@
 # Database Plan — Surgery Department (OR Module)
 
 ## Overview
-Operating Theater module for the Surgery Department. Manages patients, surgical procedures, OR scheduling with overlap prevention, surgical teams, intraoperative events, implants, specimens, PACU recovery, and safety counts.
+Operating Theater module for the Surgery Department. Manages patients (with embedded vitals), doctors, appointments, payments, contact inquiries, surgical procedures, OR scheduling with overlap prevention, and surgical teams.
 
 ---
 
 ## 1. Entities, Attributes & Constraints
 
-### Patient
+### Patient (vitals embedded per guidelines)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
@@ -19,6 +19,11 @@ Operating Theater module for the Surgery Department. Manages patients, surgical 
 | birthdate | DATE | | NOT NULL |
 | sex | CHAR(1) | | NOT NULL, CHECK (IN 'M','F') |
 | medical_history | TEXT | | |
+| blood_pressure | VARCHAR(20) | | (embedded vital) |
+| heart_rate | INTEGER | | CHECK (> 0) |
+| temperature | DECIMAL(4,1) | | (embedded vital) |
+| spo2 | INTEGER | | CHECK (0-100) |
+| recorded_at | TIMESTAMP | | (vitals timestamp) |
 
 ---
 
@@ -32,6 +37,20 @@ Operating Theater module for the Surgery Department. Manages patients, surgical 
 
 ---
 
+### Geo_Location (guideline requirement)
+
+| Attribute | Domain | Key | Constraints |
+|-----------|--------|-----|-------------|
+| location_id | INTEGER | PK | GENERATED ALWAYS AS IDENTITY |
+| hospital_id | INTEGER | FK → Hospital | NOT NULL |
+| address | VARCHAR(200) | | NOT NULL |
+| city | VARCHAR(100) | | NOT NULL |
+| state | VARCHAR(100) | | |
+| zip | VARCHAR(20) | | |
+| country | VARCHAR(100) | | NOT NULL |
+
+---
+
 ### Department
 
 | Attribute | Domain | Key | Constraints |
@@ -39,7 +58,7 @@ Operating Theater module for the Surgery Department. Manages patients, surgical 
 | department_code | VARCHAR(10) | PK | NOT NULL |
 | name | VARCHAR(100) | UNIQUE | NOT NULL |
 | hospital_id | INTEGER | FK → Hospital | NOT NULL |
-| chairman_staff_id | INTEGER | FK → Staff(staff_id) | |
+| chairman_doctor_id | INTEGER | FK → Doctor | |
 | chair_start_date | DATE | | |
 
 ---
@@ -53,34 +72,31 @@ Operating Theater module for the Surgery Department. Manages patients, surgical 
 
 ---
 
-### Staff (unified personnel — doctors, nurses, techs)
+### Doctor
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
-| staff_id | INTEGER | PK | GENERATED ALWAYS AS IDENTITY |
+| doctor_id | INTEGER | PK | GENERATED ALWAYS AS IDENTITY |
 | ssn | VARCHAR(14) | UNIQUE | NOT NULL |
 | name | VARCHAR(100) | | NOT NULL |
-| role | VARCHAR(20) | | NOT NULL, CHECK (IN 'doctor','nurse','tech') |
 | sex | CHAR(1) | | CHECK (IN 'M','F') |
 | birth_date | DATE | | |
-| major_area | VARCHAR(100) | | NOT NULL when role='doctor', NULL otherwise |
-| degree | VARCHAR(50) | | NOT NULL when role='doctor', NULL otherwise |
+| major_area | VARCHAR(100) | | NOT NULL |
+| degree | VARCHAR(50) | | NOT NULL |
 | department_code | VARCHAR(10) | FK → Department | NOT NULL |
-| **Role Validation** | | | CHECK ((role='doctor' AND major_area IS NOT NULL AND degree IS NOT NULL) OR (role!='doctor' AND major_area IS NULL AND degree IS NULL)) |
 | join_date | DATE | | |
 | email | VARCHAR(100) | | |
 | phone | VARCHAR(20) | | |
 
 ---
 
-### Treats (M:N Staff ↔ Patient)
+### Treats (Doctor ↔ Patient, with hours_per_week)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
 | patient_number | VARCHAR(20) | PK, FK → Patient | NOT NULL, ON DELETE CASCADE |
-| staff_id | INTEGER | PK, FK → Staff | NOT NULL, ON DELETE CASCADE |
+| doctor_id | INTEGER | PK, FK → Doctor | NOT NULL |
 | hours_per_week | INTEGER | | CHECK (>= 0) |
-| **Doctor-Only** | | | Trigger: BEFORE INSERT/UPDATE ensures staff_id references a doctor |
 
 ---
 
@@ -89,12 +105,11 @@ Operating Theater module for the Surgery Department. Manages patients, surgical 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
 | prescription_id | INTEGER | PK | GENERATED ALWAYS AS IDENTITY |
-| staff_id | INTEGER | FK → Staff | NOT NULL |
+| doctor_id | INTEGER | FK → Doctor | NOT NULL |
 | patient_number | VARCHAR(20) | FK → Patient | NOT NULL |
 | prescription_date | DATE | | NOT NULL |
 | start_date | DATE | | NOT NULL |
 | end_date | DATE | | NOT NULL, CHECK (end >= start) |
-| **Doctor-Only** | | | Trigger: BEFORE INSERT/UPDATE ensures staff_id references a doctor |
 
 ---
 
@@ -107,18 +122,18 @@ Operating Theater module for the Surgery Department. Manages patients, surgical 
 
 ---
 
-### Prescription_Medication (M:N)
+### Prescription_Medication (M:N, with directions)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
 | prescription_id | INTEGER | PK, FK → Prescription | NOT NULL, ON DELETE CASCADE |
 | medication_id | INTEGER | PK, FK → Medication | NOT NULL, ON DELETE RESTRICT |
-| times_per_day | INTEGER | | NOT NULL, CHECK (> 0) |
+| directions | TEXT | | NOT NULL |
 | dose | VARCHAR(50) | | NOT NULL |
 
 ---
 
-### Room (Operating Rooms & Patient Care Areas)
+### Room (enhanced for Surgery — OR rooms)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
@@ -134,36 +149,7 @@ Operating Theater module for the Surgery Department. Manages patients, surgical 
 
 ---
 
-### Clinic_Appointment (pre-op / post-op visits only)
-
-| Attribute | Domain | Key | Constraints |
-|-----------|--------|-----|-------------|
-| appointment_id | INTEGER | PK | GENERATED ALWAYS AS IDENTITY |
-| patient_number | VARCHAR(20) | FK → Patient | NOT NULL |
-| staff_id | INTEGER | FK → Staff | NOT NULL |
-| room_id | INTEGER | FK → Room | |
-| appointment_date | TIMESTAMP | | NOT NULL |
-| status | VARCHAR(20) | | NOT NULL, CHECK (IN 'scheduled','completed','cancelled') |
-| reason | VARCHAR(500) | | |
-| case_id | INTEGER | FK → Surgery_Case | ON DELETE SET NULL |
-
----
-
-### Scan_Document
-
-| Attribute | Domain | Key | Constraints |
-|-----------|--------|-----|-------------|
-| scan_id | INTEGER | PK | GENERATED ALWAYS AS IDENTITY |
-| patient_number | VARCHAR(20) | FK → Patient | NOT NULL |
-| uploaded_by_staff_id | INTEGER | FK → Staff | NOT NULL |
-| file_path | VARCHAR(500) | | NOT NULL |
-| upload_date | TIMESTAMP | | NOT NULL, DEFAULT CURRENT_TIMESTAMP |
-| description | VARCHAR(200) | | |
-| document_type | VARCHAR(50) | | CHECK (IN 'consent','operative_report','imaging','lab_result') |
-
----
-
-### Surgical_Procedure (master list — CPT / ICD-PCS)
+### Surgical_Procedure (surgery-specific master list)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
@@ -175,34 +161,7 @@ Operating Theater module for the Surgery Department. Manages patients, surgical 
 
 ---
 
-### Admission (hospital stay)
-
-| Attribute | Domain | Key | Constraints |
-|-----------|--------|-----|-------------|
-| admission_id | INTEGER | PK | GENERATED ALWAYS AS IDENTITY |
-| patient_number | VARCHAR(20) | FK → Patient | NOT NULL |
-| admission_date | DATE | | NOT NULL |
-| discharge_date | DATE | | CHECK (discharge >= admission) |
-| bed_number | VARCHAR(20) | | |
-
----
-
-### Vital_Sign (time-series)
-
-| Attribute | Domain | Key | Constraints |
-|-----------|--------|-----|-------------|
-| vital_id | INTEGER | PK | GENERATED ALWAYS AS IDENTITY |
-| patient_number | VARCHAR(20) | FK → Patient | NOT NULL |
-| recorded_at | TIMESTAMP | | NOT NULL |
-| blood_pressure | VARCHAR(20) | | |
-| heart_rate | INTEGER | | CHECK (> 0) |
-| temperature | DECIMAL(4,1) | | |
-| spo2 | INTEGER | | CHECK (0-100) |
-| recorded_by_staff_id | INTEGER | FK → Staff | NOT NULL |
-
----
-
-### Surgery_Case (central hub)
+### Surgery_Case (central hub for surgery)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
@@ -211,13 +170,83 @@ Operating Theater module for the Surgery Department. Manages patients, surgical 
 | procedure_code | VARCHAR(20) | FK → Surgical_Procedure | NOT NULL |
 | priority | VARCHAR(20) | | NOT NULL, CHECK (IN 'elective','emergency','urgent') |
 | status | VARCHAR(20) | | NOT NULL, CHECK (IN 'scheduled','pre_op','in_or','in_pacu','completed','cancelled') |
-| admission_id | INTEGER | FK → Admission | |
 | cancel_reason | VARCHAR(500) | | |
 | created_at | TIMESTAMP | | NOT NULL, DEFAULT CURRENT_TIMESTAMP |
 
 ---
 
-### Surgery_Schedule (OR scheduling)
+### Appointment (guideline requirement)
+
+| Attribute | Domain | Key | Constraints |
+|-----------|--------|-----|-------------|
+| appointment_id | INTEGER | PK | GENERATED ALWAYS AS IDENTITY |
+| patient_number | VARCHAR(20) | FK → Patient | NOT NULL |
+| doctor_id | INTEGER | FK → Doctor | NOT NULL |
+| room_id | INTEGER | FK → Room | |
+| appointment_date | TIMESTAMP | | NOT NULL |
+| status | VARCHAR(20) | | NOT NULL, CHECK (IN 'scheduled','completed','cancelled') |
+| reason | VARCHAR(500) | | |
+| case_id | INTEGER | FK → Surgery_Case | ON DELETE SET NULL |
+
+---
+
+### Payment (guideline requirement: register/pay/refund)
+
+| Attribute | Domain | Key | Constraints |
+|-----------|--------|-----|-------------|
+| payment_id | INTEGER | PK | GENERATED ALWAYS AS IDENTITY |
+| patient_number | VARCHAR(20) | FK → Patient | NOT NULL |
+| amount | DECIMAL(10,2) | | NOT NULL |
+| payment_date | TIMESTAMP | | NOT NULL, DEFAULT CURRENT_TIMESTAMP |
+| payment_type | VARCHAR(20) | | NOT NULL, CHECK (IN 'register','pay','refund') |
+| description | VARCHAR(500) | | |
+
+---
+
+### User (guideline requirement for login)
+
+| Attribute | Domain | Key | Constraints |
+|-----------|--------|-----|-------------|
+| user_id | INTEGER | PK | GENERATED ALWAYS AS IDENTITY |
+| username | VARCHAR(50) | UNIQUE | NOT NULL |
+| password_hash | VARCHAR(255) | | NOT NULL |
+| role | VARCHAR(20) | | NOT NULL, CHECK (IN 'admin','doctor','nurse','staff') |
+| doctor_id | INTEGER | FK → Doctor | (links to doctor) |
+| patient_number | VARCHAR(20) | FK → Patient | (links to patient) |
+| last_login | TIMESTAMP | | |
+
+---
+
+### Contact_Inquiry (guideline requirement)
+
+| Attribute | Domain | Key | Constraints |
+|-----------|--------|-----|-------------|
+| inquiry_id | INTEGER | PK | GENERATED ALWAYS AS IDENTITY |
+| name | VARCHAR(100) | | NOT NULL |
+| email | VARCHAR(100) | | NOT NULL |
+| phone | VARCHAR(20) | | |
+| subject | VARCHAR(200) | | NOT NULL |
+| message | TEXT | | NOT NULL |
+| submitted_at | TIMESTAMP | | NOT NULL, DEFAULT CURRENT_TIMESTAMP |
+| status | VARCHAR(20) | | NOT NULL, DEFAULT 'pending', CHECK (IN 'pending','read','replied','closed') |
+
+---
+
+### Scan_Document (guideline requirement for file uploads)
+
+| Attribute | Domain | Key | Constraints |
+|-----------|--------|-----|-------------|
+| scan_id | INTEGER | PK | GENERATED ALWAYS AS IDENTITY |
+| patient_number | VARCHAR(20) | FK → Patient | NOT NULL |
+| uploaded_by_doctor_id | INTEGER | FK → Doctor | NOT NULL |
+| file_path | VARCHAR(500) | | NOT NULL |
+| upload_date | TIMESTAMP | | NOT NULL, DEFAULT CURRENT_TIMESTAMP |
+| description | VARCHAR(200) | | |
+| document_type | VARCHAR(50) | | CHECK (IN 'consent','operative_report','imaging','lab_result') |
+
+---
+
+### Surgery_Schedule (OR scheduling with overlap prevention)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
@@ -232,109 +261,13 @@ Operating Theater module for the Surgery Department. Manages patients, surgical 
 
 ---
 
-### Surgical_Team_Assignment
+### Surgical_Team_Assignment (surgery team with roles)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
 | case_id | INTEGER | PK, FK → Surgery_Case | NOT NULL |
-| staff_id | INTEGER | PK, FK → Staff | NOT NULL |
+| doctor_id | INTEGER | PK, FK → Doctor | NOT NULL |
 | role | VARCHAR(30) | PK | NOT NULL, CHECK (IN 'primary_surgeon','assistant','anesthesiologist','scrub_nurse','circulating_nurse') |
-
----
-
-### IntraOp_Event
-
-| Attribute | Domain | Key | Constraints |
-|-----------|--------|-----|-------------|
-| event_id | INTEGER | PK | GENERATED ALWAYS AS IDENTITY |
-| case_id | INTEGER | FK → Surgery_Case | NOT NULL |
-| event_time | TIMESTAMP | | NOT NULL |
-| event_type | VARCHAR(50) | | NOT NULL, CHECK (IN 'incision','biopsy','bleeding','implant_placed','closure') |
-| notes | TEXT | | |
-
----
-
-### IntraOp_Medication (drugs given during surgery)
-
-| Attribute | Domain | Key | Constraints |
-|-----------|--------|-----|-------------|
-| medication_id | INTEGER | PK | GENERATED ALWAYS AS IDENTITY |
-| case_id | INTEGER | FK → Surgery_Case | NOT NULL |
-| drug_name | VARCHAR(100) | | NOT NULL |
-| dose | VARCHAR(50) | | NOT NULL |
-| route | VARCHAR(30) | | NOT NULL, CHECK (IN 'IV','PO','IM','SC','inhalation','topical') |
-| administered_at | TIMESTAMP | | NOT NULL |
-| given_by_staff_id | INTEGER | FK → Staff | NOT NULL |
-| notes | TEXT | | |
-
----
-
-### Specimen
-
-| Attribute | Domain | Key | Constraints |
-|-----------|--------|-----|-------------|
-| specimen_id | INTEGER | PK | GENERATED ALWAYS AS IDENTITY |
-| case_id | INTEGER | FK → Surgery_Case | NOT NULL |
-| laterality | VARCHAR(20) | | CHECK (IN 'left','right','bilateral') |
-| tissue_type | VARCHAR(100) | | NOT NULL |
-| container_type | VARCHAR(100) | | NOT NULL |
-| pathology_request_id | VARCHAR(50) | | |
-
----
-
-### Implant_Device
-
-| Attribute | Domain | Key | Constraints |
-|-----------|--------|-----|-------------|
-| implant_id | INTEGER | PK | GENERATED ALWAYS AS IDENTITY |
-| case_id | INTEGER | FK → Surgery_Case | NOT NULL |
-| device_type | VARCHAR(100) | | NOT NULL |
-| serial_number | VARCHAR(100) | | NOT NULL |
-| lot_number | VARCHAR(100) | | |
-| manufacturer | VARCHAR(200) | | NOT NULL |
-
----
-
-### PACU_Record
-
-| Attribute | Domain | Key | Constraints |
-|-----------|--------|-----|-------------|
-| pacu_id | INTEGER | PK | GENERATED ALWAYS AS IDENTITY |
-| case_id | INTEGER | FK → Surgery_Case (UNIQUE) | NOT NULL |
-| arrival_time | TIMESTAMP | | NOT NULL |
-| discharge_time | TIMESTAMP | | CHECK (discharge >= arrival) |
-| aldrete_score | INTEGER | | CHECK (0-10) |
-| pain_score | INTEGER | | CHECK (0-10) |
-| complications | TEXT | | |
-
----
-
-### Surgical_Count
-
-| Attribute | Domain | Key | Constraints |
-|-----------|--------|-----|-------------|
-| count_id | INTEGER | PK | GENERATED ALWAYS AS IDENTITY |
-| case_id | INTEGER | FK → Surgery_Case | NOT NULL |
-| count_type | VARCHAR(30) | | NOT NULL, CHECK (IN 'sponge','needle','instrument') |
-| pre_count | INTEGER | | NOT NULL, CHECK (>= 0) |
-| post_count | INTEGER | | NOT NULL, CHECK (>= 0) |
-| verified_by_staff_id | INTEGER | FK → Staff | NOT NULL |
-| verified_at | TIMESTAMP | | NOT NULL, DEFAULT CURRENT_TIMESTAMP |
-
----
-
-### Surgery_Audit_Log (medicolegal audit trail)
-
-| Attribute | Domain | Key | Constraints |
-|-----------|--------|-----|-------------|
-| log_id | INTEGER | PK | GENERATED ALWAYS AS IDENTITY |
-| table_name | VARCHAR(50) | | NOT NULL |
-| record_id | INTEGER | | NOT NULL |
-| action | VARCHAR(20) | | NOT NULL, CHECK (IN 'INSERT','UPDATE','DELETE') |
-| changed_by_staff_id | INTEGER | FK → Staff | NOT NULL |
-| changed_at | TIMESTAMP | | NOT NULL, DEFAULT CURRENT_TIMESTAMP |
-| old_data | JSONB | | (previous row snapshot) |
-| new_data | JSONB | | (new row snapshot) |
 
 ---
 
@@ -342,33 +275,28 @@ Operating Theater module for the Surgery Department. Manages patients, surgical 
 
 | Entity 1 | Card. | Relationship | Card. | Entity 2 | Detail |
 |----------|-------|-------------|-------|----------|--------|
+| Hospital | 1 | has geo locations | N | Geo_Location | location FK |
 | Hospital | 1 | contains | N | Department | hospital_id FK |
 | Department | 1 | has locations | N | Department_Location | composite PK |
-| Department | 1 | employs | N | Staff | department_code FK |
-| Staff (doctor) | 0..1 | chaired by | 1 | Department | chairman_staff_id FK |
-| Staff | M | treats | N | Patient | Treats junction |
-| Staff | 1 | writes | N | Prescription | staff_id FK |
+| Department | 1 | employs | N | Doctor | department_code FK |
+| Doctor | 0..1 | chaired by | 1 | Department | chairman_doctor_id FK |
+| Doctor | M | treats | N | Patient | Treats junction |
+| Doctor | 1 | writes | N | Prescription | doctor_id FK |
 | Patient | 1 | receives | N | Prescription | patient_number FK |
 | Prescription | M | includes | N | Medication | Prescription_Medication junction |
 | Hospital | 1 | contains | N | Room | hospital_id FK |
-| Patient | 1 | admitted to | N | Admission | patient_number FK |
-| Patient | 1 | has vitals | N | Vital_Sign | patient_number FK |
 | Patient | 1 | undergoes | N | Surgery_Case | patient_number FK |
 | Surgery_Case | 1 | scheduled as | 1 | Surgery_Schedule | case_id FK (UNIQUE) |
 | Surgery_Case | 1 | staffed by | N | Surgical_Team_Assignment | case_id FK |
-| Surgery_Case | 1 | has events | N | IntraOp_Event | case_id FK |
-| Surgery_Case | 1 | receives meds | N | IntraOp_Medication | case_id FK |
-| Surgery_Case | 1 | yields | N | Specimen | case_id FK |
-| Surgery_Case | 1 | uses | N | Implant_Device | case_id FK |
-| Surgery_Case | 1 | recovers in | 1 | PACU_Record | case_id FK (UNIQUE) |
-| Surgery_Case | 1 | counted in | N | Surgical_Count | case_id FK |
 | Surgery_Schedule | 1 | occupies | 1 | Room | or_room_id FK |
-| Clinic_Appointment | 1 | relates to | 0..1 | Surgery_Case | case_id FK (ON DELETE SET NULL) |
-| Staff | 1 | records vitals | N | Vital_Sign | recorded_by_staff_id FK |
-| Staff | 1 | verifies counts | N | Surgical_Count | verified_by_staff_id FK |
-| Staff | 1 | on team | N | Surgical_Team_Assignment | staff_id FK |
-| Staff | 1 | gives meds | N | IntraOp_Medication | given_by_staff_id FK |
-| Staff | 1 | uploads scans | N | Scan_Document | uploaded_by_staff_id FK |
+| Doctor | 1 | on team | N | Surgical_Team_Assignment | doctor_id FK |
+| Patient | 1 | books | N | Appointment | patient_number FK |
+| Doctor | 1 | runs | N | Appointment | doctor_id FK |
+| Appointment | 1 | relates to | 0..1 | Surgery_Case | case_id FK (ON DELETE SET NULL) |
+| Patient | 1 | makes | N | Payment | patient_number FK |
+| User | 0..1 | links to | 1 | Doctor | doctor_id FK |
+| User | 0..1 | links to | 1 | Patient | patient_number FK |
+| Doctor | 1 | uploads | N | Scan_Document | uploaded_by_doctor_id FK |
 
 ---
 
@@ -376,27 +304,23 @@ Operating Theater module for the Surgery Department. Manages patients, surgical 
 
 | Entity | Relationship | Constraint | Meaning |
 |--------|-------------|------------|---------|
-| Staff | belongs to → Department | **Total** | department_code NOT NULL |
-| Staff | major_area / degree | **Total (conditional)** | NOT NULL when role='doctor', NULL otherwise |
-| Treats staff_id | Treats → Staff(doctor) | **Total** | Trigger ensures only doctors can treat patients |
-| Prescription staff_id | Prescription → Staff(doctor) | **Total** | Trigger ensures only doctors can prescribe |
-| Department | has chairman → Staff(doctor) | **Partial** | chairman_staff_id nullable |
+| Doctor | belongs to → Department | **Total** | department_code NOT NULL |
+| Department | has chairman → Doctor | **Partial** | chairman_doctor_id nullable |
 | Department | belongs to → Hospital | **Total** | hospital_id NOT NULL |
 | Room | belongs to → Hospital | **Total** | hospital_id NOT NULL |
 | Room | or_type → room_type | **Total (conditional)** | NOT NULL when room_type='OR', NULL otherwise |
-| Admission | discharge → date | **Partial** | discharge_date nullable |
-| Surgery_Case | linked to → Admission | **Partial** | admission_id nullable |
-| Surgery_Case | has → PACU_Record | **Partial** | not all cases reach PACU |
+| Surgery_Case | linked to → Admission | **Partial** | (removed — no Admission table) |
+| Surgery_Case | has → PACU_Record | **Partial** | (removed — no PACU_Record table) |
 | Surgery_Schedule | actual times | **Partial** | actual_start/actual_end nullable |
 
 ## 4. Subtype Discriminators
 
 | Discriminator | Meaning | Present? |
 |---------------|---------|----------|
-| **Disjoint** | Instance belongs to at most one subtype (XOR) | No generalization hierarchies in this schema |
+| **Disjoint** | Instance belongs to at most one subtype (XOR) | No |
 | **Overlapping** | Instance can belong to multiple subtypes (AND) | No |
 
-> The previous User → Patient/Doctor generalization was removed. This schema has no subtype discriminators.
+> No generalization hierarchies in this schema.
 
 ---
 
@@ -404,27 +328,16 @@ Operating Theater module for the Surgery Department. Manages patients, surgical 
 
 | # | Requirement | Tables Involved |
 |---|-------------|-----------------|
-| 1 | Daily OR schedule | Surgery_Schedule, Room, Surgery_Case, Patient, Surgical_Procedure, Surgical_Team_Assignment, Staff |
+| 1 | Daily OR schedule | Surgery_Schedule, Room, Surgery_Case, Patient, Surgical_Procedure, Surgical_Team_Assignment, Doctor |
 | 2 | Surgery case tracking by status | Surgery_Case |
-| 3 | Implant traceability | Implant_Device, Surgery_Case, Patient, Surgical_Procedure, Surgical_Team_Assignment, Staff |
-| 4 | Surgical count safety | Surgical_Count, Surgery_Case, Staff |
-| 5 | PACU recovery times | PACU_Record, Surgery_Case, Surgical_Procedure |
-| 6 | Specimen tracking | Specimen, Surgery_Case, Patient |
-| 7 | Complication rates | IntraOp_Event, Surgery_Case, Surgical_Procedure, Surgical_Team_Assignment, Staff |
-| 8 | OR utilization | Room, Surgery_Schedule |
-| 9 | Emergency response time | Surgery_Case, IntraOp_Event |
-| 10 | Staff workload | Surgical_Team_Assignment, Surgery_Case, Staff |
-| 11 | Procedure duration vs standard | Surgery_Schedule, Surgery_Case, Surgical_Procedure |
-| 12 | Cancelled surgeries | Surgery_Case, Surgical_Procedure, Surgery_Schedule |
-| 13 | Multi-implant patients | Implant_Device, Surgery_Case, Patient |
-| 14 | Team role distribution | Surgical_Team_Assignment, Surgery_Case, Surgical_Procedure |
-| 15 | OR turnaround time | Surgery_Schedule (LEAD window) |
-| 16 | Intra-op medication log | IntraOp_Medication, Surgery_Case, Patient, Surgical_Procedure, Staff |
-| 17 | Audit log trail | Surgery_Audit_Log, Staff |
-| 12 | Cancelled surgeries | Surgery_Case, Surgery_Schedule |
-| 13 | Multi-implant patients | Implant_Device, Surgery_Case, Patient |
-| 14 | Team role distribution | Surgical_Team_Assignment, Surgery_Case, Procedure |
-| 15 | OR turnaround time | Surgery_Schedule (self-join with LEAD) |
+| 3 | OR utilization | Room, Surgery_Schedule |
+| 4 | Doctor workload | Surgical_Team_Assignment, Surgery_Case, Doctor |
+| 5 | Procedure duration vs standard | Surgery_Schedule, Surgery_Case, Surgical_Procedure |
+| 6 | Cancelled surgeries | Surgery_Case, Surgical_Procedure, Surgery_Schedule |
+| 7 | Team role distribution | Surgical_Team_Assignment, Surgery_Case, Surgical_Procedure |
+| 8 | OR turnaround time | Surgery_Schedule (LEAD window) |
+| 9 | Patient payment history | Patient, Payment |
+| 10 | Upcoming appointments | Appointment, Patient, Doctor, Room |
 
 ---
 
