@@ -11,24 +11,24 @@ CREATE EXTENSION IF NOT EXISTS btree_gist;
 -- ============================================
 DROP TABLE IF EXISTS Surgical_Team_Assignment CASCADE;
 DROP TABLE IF EXISTS Surgery_Schedule CASCADE;
-DROP TABLE IF EXISTS Surgery_Case CASCADE;
-DROP TABLE IF EXISTS Surgical_Procedure CASCADE;
-DROP TABLE IF EXISTS Room CASCADE;
-DROP TABLE IF EXISTS Scan_Document CASCADE;
-DROP TABLE IF EXISTS Contact_Inquiry CASCADE;
 DROP TABLE IF EXISTS Payment CASCADE;
-DROP TABLE IF EXISTS "User" CASCADE;
 DROP TABLE IF EXISTS Appointment CASCADE;
+DROP TABLE IF EXISTS Scan_Document CASCADE;
+DROP TABLE IF EXISTS "User" CASCADE;
 DROP TABLE IF EXISTS Prescription_Medication CASCADE;
-DROP TABLE IF EXISTS Medication CASCADE;
 DROP TABLE IF EXISTS Prescription CASCADE;
 DROP TABLE IF EXISTS Treats CASCADE;
+DROP TABLE IF EXISTS Surgery_Case CASCADE;
 DROP TABLE IF EXISTS Doctor CASCADE;
+DROP TABLE IF EXISTS Surgical_Procedure CASCADE;
+DROP TABLE IF EXISTS Room CASCADE;
 DROP TABLE IF EXISTS Department_Location CASCADE;
-DROP TABLE IF EXISTS Department CASCADE;
 DROP TABLE IF EXISTS Geo_Location CASCADE;
+DROP TABLE IF EXISTS Department CASCADE;
 DROP TABLE IF EXISTS Hospital CASCADE;
 DROP TABLE IF EXISTS Patient CASCADE;
+DROP TABLE IF EXISTS Medication CASCADE;
+DROP TABLE IF EXISTS Contact_Inquiry CASCADE;
 
 -- ============================================
 -- Patient (vitals embedded per guidelines)
@@ -42,6 +42,7 @@ CREATE TABLE Patient (
     birthdate       DATE NOT NULL,
     sex             CHAR(1) NOT NULL CHECK (sex IN ('M', 'F')),
     medical_history TEXT,
+    admission_date  DATE NOT NULL,
     blood_pressure  VARCHAR(20),
     heart_rate      INTEGER CHECK (heart_rate > 0),
     temperature     DECIMAL(4,1),
@@ -62,13 +63,10 @@ CREATE TABLE Hospital (
 -- Geo_Location (guideline requirement)
 -- ============================================
 CREATE TABLE Geo_Location (
-    location_id  INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    hospital_id  INTEGER NOT NULL REFERENCES Hospital(hospital_id),
-    address      VARCHAR(200) NOT NULL,
-    city         VARCHAR(100) NOT NULL,
-    state        VARCHAR(100),
-    zip          VARCHAR(20),
-    country      VARCHAR(100) NOT NULL
+    location_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    hospital_id INTEGER NOT NULL REFERENCES Hospital(hospital_id),
+    latitude    DECIMAL(10,7) NOT NULL,
+    longitude   DECIMAL(10,7) NOT NULL
 );
 
 -- ============================================
@@ -150,7 +148,7 @@ CREATE TABLE Medication (
 CREATE TABLE Prescription_Medication (
     prescription_id INTEGER NOT NULL REFERENCES Prescription(prescription_id) ON DELETE CASCADE,
     medication_id   INTEGER NOT NULL REFERENCES Medication(medication_id) ON DELETE RESTRICT,
-    directions      TEXT NOT NULL,
+    times_per_day   INTEGER NOT NULL CHECK (times_per_day > 0),
     dose            VARCHAR(50) NOT NULL,
     PRIMARY KEY (prescription_id, medication_id)
 );
@@ -215,12 +213,12 @@ CREATE TABLE Appointment (
 -- Payment (guideline requirement: register/pay/refund)
 -- ============================================
 CREATE TABLE Payment (
-    payment_id    INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    patient_number VARCHAR(20) NOT NULL REFERENCES Patient(patient_number),
-    amount        DECIMAL(10,2) NOT NULL,
-    payment_date  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    payment_type  VARCHAR(20) NOT NULL CHECK (payment_type IN ('register', 'pay', 'refund')),
-    description   VARCHAR(500)
+    payment_id     INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    appointment_id INTEGER NOT NULL UNIQUE REFERENCES Appointment(appointment_id),
+    amount         DECIMAL(10,2) NOT NULL,
+    payment_date   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    payment_type   VARCHAR(20) NOT NULL CHECK (payment_type IN ('register', 'pay', 'refund')),
+    description    VARCHAR(500)
 );
 
 -- ============================================
@@ -316,7 +314,7 @@ CREATE INDEX idx_prescription_doctor ON Prescription(doctor_id);
 CREATE INDEX idx_prescription_patient ON Prescription(patient_number);
 CREATE INDEX idx_treats_doctor ON Treats(doctor_id);
 
-CREATE INDEX idx_payment_patient ON Payment(patient_number);
+CREATE INDEX idx_payment_appointment ON Payment(appointment_id);
 CREATE INDEX idx_payment_date ON Payment(payment_date);
 
 CREATE INDEX idx_scan_patient ON Scan_Document(patient_number);
