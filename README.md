@@ -11,26 +11,26 @@ A specialized **Operating Theater database** for the Surgery Department. Manages
 
 | File | Description |
 |------|-------------|
-| `docs/erd/plan.md` | Comprehensive database plan — 23 tables, attributes, domains, keys, constraints, relationships, completeness constraints, functional requirements, normalization |
+| `docs/erd/plan.md` | Comprehensive database plan — 25 tables, attributes, domains, keys, constraints, relationships, completeness constraints, functional requirements, normalization |
 | `docs/erd/ERD.puml` | Original PlantUML ERD (legacy) |
 | `docs/erd/keys_table.md` | PK/FK reference — all primary keys, foreign keys, composite keys, unique constraints, and indexes |
 
-**Entities (23 tables):**
-- **Core:** Patient, Hospital, Department, Department_Location, Doctor
+**Entities (25 tables):**
+- **Core:** Patient, Hospital, Department, Department_Location, Staff (replaces Doctor)
 - **Clinical:** Treats, Prescription, Medication, Prescription_Medication, Vital_Sign, Admission, Scan_Document
-- **Surgery:** Procedure, Surgery_Case, Surgery_Schedule, Surgical_Team_Assignment, IntraOp_Event
-- **Peri-op:** Specimen, Implant_Device, PACU_Record, Surgical_Count
+- **Surgery:** Surgical_Procedure, Surgery_Case, Surgery_Schedule, Surgical_Team_Assignment, IntraOp_Event, IntraOp_Medication
+- **Peri-op:** Specimen, Implant_Device, PACU_Record, Surgical_Count, Surgery_Audit_Log
 - **Clinic:** Clinic_Appointment (pre-op/post-op visits)
 
-**Removed (general clinic tables):** Geo_Location, Contact_Inquiry, User, Payment, Appointment (renamed)
+**Removed (general clinic tables):** Geo_Location, Contact_Inquiry, User, Payment, Appointment (renamed), Doctor (replaced by Staff)
 
 ### Deliverable 2: SQL Implementation
 
 | File | Description |
 |------|-------------|
-| `sql/schema.sql` | DDL — 23 CREATE TABLE statements, CHECK/FK/UNIQUE constraints, `EXCLUDE USING gist` for OR overlap prevention, 27 indexes |
+| `sql/schema.sql` | DDL — 25 CREATE TABLE statements, CHECK/FK/UNIQUE constraints, `EXCLUDE USING gist` for OR overlap prevention, audit triggers, 34 indexes |
 | `sql/seed.sql` | Realistic seed data — hospitals, ORs (with robot/C-arm/flow), procedures (CPT codes), surgery cases, schedules, teams, events, implants, specimens, PACU records, counts |
-| `sql/queries.sql` | 15 surgery-specific queries — daily OR schedule, implant traceability, count mismatch alerts, PACU recovery times, complication rates, OR utilization, emergency response time, surgeon workload, turnaround time |
+| `sql/queries.sql` | 17 surgery-specific queries — daily OR schedule, implant traceability, count mismatch alerts, PACU recovery times, complication rates, OR utilization, emergency response time, staff workload, turnaround time, intra-op medication log, audit trail |
 
 ### Key Features
 - **OR Overlap Prevention** — `EXCLUDE USING gist (or_room_id WITH =, tstzrange(scheduled_start, scheduled_end) WITH &&)`
