@@ -1,13 +1,16 @@
-# Database Blueprint — Surgery Department
+# ERD Blueprint — Surgery Department
 
-## Entities, Keys & Constraints
+## Overview
+ERD for the Surgery Department Hospital Information System, covering patients, surgeons, operating rooms, appointments, prescriptions, and administrative functions.
 
 ---
 
+## Entities , Attributes & Keys
+
 ### Patient
 
-| Column | Type | Key |
-|--------|------|-----|
+| Attribute | Type | Key |
+|-----------|------|-----|
 | patient_number | VARCHAR(20) | PK |
 | ssn | VARCHAR(14) | UNIQUE |
 | name | VARCHAR(100) | |
@@ -25,8 +28,8 @@
 
 ### Hospital
 
-| Column | Type | Key |
-|--------|------|-----|
+| Attribute | Type | Key |
+|-----------|------|-----|
 | hospital_id | INTEGER | PK |
 | name | VARCHAR(100) | |
 | address | VARCHAR(200) | |
@@ -35,8 +38,8 @@
 
 ### Department
 
-| Column | Type | Key |
-|--------|------|-----|
+| Attribute | Type | Key |
+|-----------|------|-----|
 | department_code | VARCHAR(10) | PK |
 | name | VARCHAR(100) | UNIQUE |
 | hospital_id | INTEGER | FK → Hospital(hospital_id) |
@@ -47,8 +50,8 @@
 
 ### Department_Location
 
-| Column | Type | Key |
-|--------|------|-----|
+| Attribute | Type | Key |
+|-----------|------|-----|
 | department_code | VARCHAR(10) | PK, FK → Department(department_code) |
 | location | VARCHAR(200) | PK |
 
@@ -56,8 +59,8 @@
 
 ### Doctor
 
-| Column | Type | Key |
-|--------|------|-----|
+| Attribute | Type | Key |
+|-----------|------|-----|
 | ssn | VARCHAR(14) | PK |
 | name | VARCHAR(100) | |
 | sex | CHAR(1) | |
@@ -71,10 +74,10 @@
 
 ---
 
-### Treats
+### Treats (relationship: Doctor ↔ Patient)
 
-| Column | Type | Key |
-|--------|------|-----|
+| Attribute | Type | Key |
+|-----------|------|-----|
 | patient_number | VARCHAR(20) | PK, FK → Patient(patient_number) |
 | doctor_ssn | VARCHAR(14) | PK, FK → Doctor(ssn) |
 | hours_per_week | INTEGER | |
@@ -83,8 +86,8 @@
 
 ### Prescription
 
-| Column | Type | Key |
-|--------|------|-----|
+| Attribute | Type | Key |
+|-----------|------|-----|
 | prescription_id | INTEGER | PK |
 | doctor_ssn | VARCHAR(14) | FK → Doctor(ssn) |
 | patient_number | VARCHAR(20) | FK → Patient(patient_number) |
@@ -96,17 +99,17 @@
 
 ### Medication
 
-| Column | Type | Key |
-|--------|------|-----|
+| Attribute | Type | Key |
+|-----------|------|-----|
 | medication_id | INTEGER | PK |
 | name | VARCHAR(100) | UNIQUE |
 
 ---
 
-### Prescription_Medication
+### Prescription_Medication (relationship: Prescription ↔ Medication)
 
-| Column | Type | Key |
-|--------|------|-----|
+| Attribute | Type | Key |
+|-----------|------|-----|
 | prescription_id | INTEGER | PK, FK → Prescription(prescription_id) |
 | medication_id | INTEGER | PK, FK → Medication(medication_id) |
 | times_per_day | INTEGER | |
@@ -116,8 +119,8 @@
 
 ### Room
 
-| Column | Type | Key |
-|--------|------|-----|
+| Attribute | Type | Key |
+|-----------|------|-----|
 | room_id | INTEGER | PK |
 | hospital_id | INTEGER | FK → Hospital(hospital_id) |
 | room_number | VARCHAR(20) | |
@@ -128,8 +131,8 @@
 
 ### Appointment
 
-| Column | Type | Key |
-|--------|------|-----|
+| Attribute | Type | Key |
+|-----------|------|-----|
 | appointment_id | INTEGER | PK |
 | patient_number | VARCHAR(20) | FK → Patient(patient_number) |
 | doctor_ssn | VARCHAR(14) | FK → Doctor(ssn) |
@@ -141,8 +144,8 @@
 
 ### Payment
 
-| Column | Type | Key |
-|--------|------|-----|
+| Attribute | Type | Key |
+|-----------|------|-----|
 | payment_id | INTEGER | PK |
 | appointment_id | INTEGER | FK → Appointment(appointment_id) |
 | amount | DECIMAL(10,2) | |
@@ -154,8 +157,8 @@
 
 ### User
 
-| Column | Type | Key |
-|--------|------|-----|
+| Attribute | Type | Key |
+|-----------|------|-----|
 | user_id | INTEGER | PK |
 | username | VARCHAR(50) | UNIQUE |
 | password_hash | VARCHAR(255) | |
@@ -167,8 +170,8 @@
 
 ### Contact_Inquiry
 
-| Column | Type | Key |
-|--------|------|-----|
+| Attribute | Type | Key |
+|-----------|------|-----|
 | inquiry_id | INTEGER | PK |
 | name | VARCHAR(100) | |
 | email | VARCHAR(100) | |
@@ -181,8 +184,8 @@
 
 ### Geo_Location
 
-| Column | Type | Key |
-|--------|------|-----|
+| Attribute | Type | Key |
+|-----------|------|-----|
 | location_id | INTEGER | PK |
 | latitude | DECIMAL(10,7) | |
 | longitude | DECIMAL(10,7) | |
@@ -194,14 +197,36 @@
 
 ### Scan_Document
 
-| Column | Type | Key |
-|--------|------|-----|
+| Attribute | Type | Key |
+|-----------|------|-----|
 | scan_id | INTEGER | PK |
 | patient_number | VARCHAR(20) | FK → Patient(patient_number) |
 | doctor_ssn | VARCHAR(14) | FK → Doctor(ssn) |
 | file_path | VARCHAR(500) | |
 | upload_date | TIMESTAMP | |
 | description | VARCHAR(200) | |
+
+---
+
+## Key Relationships
+
+| Entity 1 | Cardinality | Relationship | Cardinality | Entity 2 |
+|----------|------------|-------------|-------------|----------|
+| Hospital | 1 | contains | N | Department |
+| Department | 1 | has locations | N | Department_Location |
+| Department | 1 | employs | N | Doctor |
+| Doctor | 0..1 | chaired by | 1 | Department |
+| Doctor | M | treats | N | Patient |
+| Doctor | 1 | writes | N | Prescription |
+| Patient | 1 | receives | N | Prescription |
+| Prescription | M | includes | N | Medication |
+| Hospital | 1 | contains | N | Room |
+| Room | 1 | assigned to | N | Appointment |
+| Patient | 1 | books | N | Appointment |
+| Doctor | 1 | scheduled with | N | Appointment |
+| Appointment | 1 | has payment | 1 | Payment |
+| Patient | 1 | has scans | N | Scan_Document |
+| Doctor | 1 | uploads | N | Scan_Document |
 
 ---
 
@@ -215,6 +240,8 @@
 | Department | belongs to → Hospital | **Total** | Every Department MUST belong to a Hospital (`hospital_id` NOT NULL) |
 | Room | belongs to → Hospital | **Total** | Every Room MUST belong to a Hospital (`hospital_id` NOT NULL) |
 | Appointment | has → Payment | **Partial** | Not every Appointment has a Payment yet; Payment is created after the appointment |
+
+---
 
 ## Subtype Discriminators
 
