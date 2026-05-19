@@ -7,7 +7,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 
 ## 1. Entities, Attributes & Constraints
 
-### Patient (vitals embedded per guidelines)
+### Patient (guideline requirement)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
@@ -28,7 +28,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 
 ---
 
-### Hospital
+### Hospital (guideline requirement)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
@@ -49,7 +49,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 
 ---
 
-### Department
+### Department (guideline requirement)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
@@ -61,7 +61,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 
 ---
 
-### Department_Location
+### Department_Location (guideline requirement)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
@@ -70,7 +70,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 
 ---
 
-### Doctor
+### Doctor (guideline requirement)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
@@ -88,7 +88,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 
 ---
 
-### Treats (Doctor ↔ Patient, with hours_per_week)
+### Treats (guideline requirement)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
@@ -98,7 +98,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 
 ---
 
-### Prescription
+### Prescription (guideline requirement)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
@@ -111,7 +111,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 
 ---
 
-### Medication
+### Medication (guideline requirement)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
@@ -120,7 +120,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 
 ---
 
-### Prescription_Medication (M:N)
+### Prescription_Medication (guideline requirement)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
@@ -131,7 +131,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 
 ---
 
-### Room (enhanced for Surgery — OR rooms)
+### Room (guideline requirement)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
@@ -146,7 +146,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 
 ---
 
-### Surgical_Procedure (surgery-specific master list)
+### Surgical_Procedure (Surgery-Specific Extras)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
@@ -158,7 +158,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 
 ---
 
-### Surgery_Case (central hub for surgery)
+### Surgery_Case (Surgery-Specific Extras)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
@@ -187,7 +187,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 
 ---
 
-### Payment (guideline requirement: register/pay/refund)
+### Payment (guideline requirement)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
@@ -200,7 +200,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 
 ---
 
-### User (guideline requirement for login)
+### User (guideline requirement)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
@@ -229,7 +229,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 
 ---
 
-### Scan_Document (guideline requirement for file uploads)
+### Scan_Document (guideline requirement)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
@@ -243,7 +243,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 
 ---
 
-### Surgery_Schedule (OR scheduling with overlap prevention)
+### Surgery_Schedule (Surgery-Specific Extras)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
@@ -258,7 +258,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 
 ---
 
-### Surgical_Team_Assignment (surgery team with roles)
+### Surgical_Team_Assignment (Surgery-Specific Extras)
 
 | Attribute | Domain | Key | Constraints |
 |-----------|--------|-----|-------------|
