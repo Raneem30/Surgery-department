@@ -32,7 +32,7 @@ A specialized database for the Surgery Department. Manages surgical cases, OR sc
 | `sql/queries.sql` | 10 surgery-specific queries — daily OR schedule, surgeries by status, OR utilization, doctor workload, procedure duration vs standard, cancelled surgeries, team role distribution, OR turnaround time, patient payment history, upcoming appointments |
 
 ### Key Features
-- **OR Overlap Prevention** — `EXCLUDE USING gist (or_room_id WITH =, tstzrange(scheduled_start, scheduled_end) WITH &&)`
+- **OR Overlap Prevention** — `EXCLUDE USING gist (or_room_id WITH =, tsrange(scheduled_start, scheduled_end) WITH &&)`
 - **Patient Vitals Embedded** — blood pressure, heart rate, temperature, SpO2 stored directly in Patient table
 - **Peri-operative Workflow** — Surgery_Case status pipeline (scheduled → pre_op → in_or → in_pacu → completed)
 - **Payment Lifecycle** — Register/pay/refund per appointment
@@ -43,10 +43,10 @@ A specialized database for the Surgery Department. Manages surgical cases, OR sc
 ## Phase 2: Application Features & Presentation
 
 ### Tech Stack
-- **Backend:** Spring Boot (Java)
+- **App:** Streamlit (Python)
 - **Database:** PostgreSQL (with btree_gist extension)
-- **Frontend:** Thymeleaf or React (TBD)
-- **Build Tool:** Maven
+- **Libraries:** psycopg2, pandas
+- **Setup:** Docker + bash script (run.sh)
 
 ### Presentation
 - Schema walkthrough (20 tables, 28 indexes, exclusion constraint)

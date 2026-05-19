@@ -278,7 +278,7 @@ CREATE TABLE Surgery_Schedule (
     CHECK (actual_end IS NULL OR actual_end > actual_start),
     EXCLUDE USING gist (
         or_room_id WITH =,
-        tstzrange(scheduled_start, scheduled_end) WITH &&
+        tsrange(scheduled_start, scheduled_end) WITH &&
     )
 );
 

@@ -254,7 +254,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 | scheduled_end | TIMESTAMP | | NOT NULL, CHECK (end > start) |
 | actual_start | TIMESTAMP | | |
 | actual_end | TIMESTAMP | | CHECK (end > start) |
-| **Overlap Prevention** | | | EXCLUDE USING gist (or_room_id WITH =, tstzrange(scheduled_start, scheduled_end) WITH &&) |
+| **Overlap Prevention** | | | EXCLUDE USING gist (or_room_id WITH =, tsrange(scheduled_start, scheduled_end) WITH &&) |
 
 ---
 

@@ -14,8 +14,8 @@ INSERT INTO Geo_Location (hospital_id, latitude, longitude) VALUES
 
 -- Departments
 INSERT INTO Department (department_code, name, hospital_id) VALUES
-    ('SURG-CAI', 'Surgery Department', 1),
-    ('SURG-ALX', 'Surgery Department', 2);
+    ('SURG-CAI', 'Cairo Surgery Department', 1),
+    ('SURG-ALX', 'Alexandria Surgery Department', 2);
 
 -- Doctors
 INSERT INTO Doctor (ssn, name, sex, birth_date, major_area, degree, department_code, join_date, email, phone) VALUES
