@@ -12,7 +12,7 @@ A Hospital Information System (HIS) for the **Surgery Department** — managing 
 | File | Description |
 |------|-------------|
 | `docs/erd/ERD.puml` | Original PlantUML ERD |
-| `docs/erd/erd_blueprint.md` | Merged ERD blueprint — entities, attributes, PKs, FKs, relationships, completeness & disjointness constraints |
+| `docs/erd/plan.md` | Comprehensive database plan — entities, attributes, domains, keys, constraints, relationships, completeness & disjointness constraints, functional requirements, normalization |
 
 **Entities identified:**
 - **Patient** — core entity with personal data, medical history, vital signs, admission date
@@ -34,8 +34,7 @@ A Hospital Information System (HIS) for the **Surgery Department** — managing 
 
 ### Deliverable 2: Relational Schema Mapping
 **Files:**
-- `docs/erd/relational_schema.md` — detailed column-level mapping (3NF, domains, constraints)
-- `docs/erd/erd_blueprint.md` — includes PK/FK reference per entity
+- `docs/erd/plan.md` — complete database plan including schema, constraints, and mapping
 - `docs/erd/keys_table.md` — comprehensive PK/FK reference table with composite keys, polymorphic refs, and indexes
 
 ### Deliverable 3: SQL Implementation
