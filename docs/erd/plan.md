@@ -142,7 +142,6 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 | or_type | VARCHAR(50) | | CHECK (IN 'general','cardiac','hybrid','robotic') |
 | has_robot | BOOLEAN | | DEFAULT FALSE |
 | has_c_arm | BOOLEAN | | DEFAULT FALSE |
-| laminar_flow | BOOLEAN | | DEFAULT FALSE |
 | | | | CHECK ((room_type='OR' AND or_type IS NOT NULL) OR (room_type!='OR' AND or_type IS NULL)) |
 
 ---
