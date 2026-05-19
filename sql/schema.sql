@@ -74,7 +74,11 @@ CREATE TABLE Staff (
     department_code VARCHAR(10) NOT NULL,
     join_date      DATE,
     email          VARCHAR(100),
-    phone          VARCHAR(20)
+    phone          VARCHAR(20),
+    CHECK (
+        (role = 'doctor' AND major_area IS NOT NULL AND degree IS NOT NULL) OR
+        (role != 'doctor' AND major_area IS NULL AND degree IS NULL)
+    )
 );
 
 -- ============================================
@@ -97,6 +101,17 @@ ALTER TABLE Staff
     ADD CONSTRAINT fk_staff_department
     FOREIGN KEY (department_code) REFERENCES Department(department_code);
 
+-- Function: ensure staff_id references a doctor
+CREATE OR REPLACE FUNCTION fn_check_staff_is_doctor()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM Staff WHERE staff_id = NEW.staff_id AND role = 'doctor') THEN
+        RAISE EXCEPTION 'staff_id % is not a doctor', NEW.staff_id;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 -- ============================================
 -- Department_Location
 -- ============================================
@@ -116,6 +131,10 @@ CREATE TABLE Treats (
     PRIMARY KEY (patient_number, staff_id)
 );
 
+CREATE TRIGGER trg_treats_doctor_check
+    BEFORE INSERT OR UPDATE ON Treats
+    FOR EACH ROW EXECUTE FUNCTION fn_check_staff_is_doctor();
+
 -- ============================================
 -- Prescription
 -- ============================================
@@ -128,6 +147,10 @@ CREATE TABLE Prescription (
     end_date          DATE NOT NULL,
     CHECK (end_date >= start_date)
 );
+
+CREATE TRIGGER trg_prescription_doctor_check
+    BEFORE INSERT OR UPDATE ON Prescription
+    FOR EACH ROW EXECUTE FUNCTION fn_check_staff_is_doctor();
 
 -- ============================================
 -- Medication
@@ -372,10 +395,10 @@ CREATE TABLE Surgery_Audit_Log (
 );
 
 -- --------------------------------------------------
--- Audit Trigger Function
+-- Audit Trigger Functions
 -- Usage: SET app.current_staff_id = <id>; in session
 -- --------------------------------------------------
-CREATE OR REPLACE FUNCTION fn_audit_trigger()
+CREATE OR REPLACE FUNCTION fn_audit_trigger_implant()
 RETURNS TRIGGER AS $$
 DECLARE
     v_staff_id INTEGER;
@@ -400,15 +423,40 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Audit triggers on Implant_Device
+CREATE OR REPLACE FUNCTION fn_audit_trigger_surgical_count()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_staff_id INTEGER;
+BEGIN
+    v_staff_id := current_setting('app.current_staff_id')::INTEGER;
+
+    IF TG_OP = 'INSERT' THEN
+        INSERT INTO Surgery_Audit_Log (table_name, record_id, action, changed_by_staff_id, new_data)
+        VALUES (TG_TABLE_NAME, NEW.count_id, 'INSERT', v_staff_id, row_to_json(NEW)::jsonb);
+        RETURN NEW;
+
+    ELSIF TG_OP = 'UPDATE' THEN
+        INSERT INTO Surgery_Audit_Log (table_name, record_id, action, changed_by_staff_id, old_data, new_data)
+        VALUES (TG_TABLE_NAME, NEW.count_id, 'UPDATE', v_staff_id, row_to_json(OLD)::jsonb, row_to_json(NEW)::jsonb);
+        RETURN NEW;
+
+    ELSIF TG_OP = 'DELETE' THEN
+        INSERT INTO Surgery_Audit_Log (table_name, record_id, action, changed_by_staff_id, old_data)
+        VALUES (TG_TABLE_NAME, OLD.count_id, 'DELETE', v_staff_id, row_to_json(OLD)::jsonb);
+        RETURN OLD;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Audit trigger on Implant_Device
 CREATE TRIGGER trg_implant_audit
     AFTER INSERT OR UPDATE OR DELETE ON Implant_Device
-    FOR EACH ROW EXECUTE FUNCTION fn_audit_trigger();
+    FOR EACH ROW EXECUTE FUNCTION fn_audit_trigger_implant();
 
--- Audit triggers on Surgical_Count
+-- Audit trigger on Surgical_Count
 CREATE TRIGGER trg_surgical_count_audit
     AFTER INSERT OR UPDATE OR DELETE ON Surgical_Count
-    FOR EACH ROW EXECUTE FUNCTION fn_audit_trigger();
+    FOR EACH ROW EXECUTE FUNCTION fn_audit_trigger_surgical_count();
 
 -- ============================================
 -- Indexes for performance

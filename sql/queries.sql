@@ -125,22 +125,42 @@ ORDER BY sc.created_at DESC;
 -- -------------------------------------------------
 -- 7. Intra-Op Complication Rates
 -- -------------------------------------------------
+WITH surgeon_cases AS (
+    SELECT
+        sp.name AS procedure_name,
+        s.name AS surgeon_name,
+        s.staff_id,
+        sp.procedure_code,
+        COUNT(*) AS total_cases
+    FROM Surgical_Team_Assignment sta
+    JOIN Surgery_Case sc ON sta.case_id = sc.case_id
+    JOIN Surgical_Procedure sp ON sc.procedure_code = sp.procedure_code
+    JOIN Staff s ON sta.staff_id = s.staff_id
+    WHERE sta.role = 'primary_surgeon'
+    GROUP BY sp.name, s.name, s.staff_id, sp.procedure_code
+),
+complicated_cases AS (
+    SELECT
+        sp.name AS procedure_name,
+        s.name AS surgeon_name,
+        COUNT(DISTINCT ie.case_id) AS cases_with_complications
+    FROM IntraOp_Event ie
+    JOIN Surgery_Case sc ON ie.case_id = sc.case_id
+    JOIN Surgical_Procedure sp ON sc.procedure_code = sp.procedure_code
+    JOIN Surgical_Team_Assignment sta
+        ON sc.case_id = sta.case_id AND sta.role = 'primary_surgeon'
+    JOIN Staff s ON sta.staff_id = s.staff_id
+    WHERE ie.event_type = 'bleeding'
+    GROUP BY sp.name, s.name
+)
 SELECT
-    sp.name AS procedure_name,
-    s.name AS surgeon_name,
-    COUNT(DISTINCT ie.case_id) AS cases_with_complications,
-    ROUND(100.0 * COUNT(DISTINCT ie.case_id) / NULLIF(
-        (SELECT COUNT(*) FROM Surgery_Case sc2
-         JOIN Surgical_Team_Assignment sta2 ON sc2.case_id = sta2.case_id AND sta2.role = 'primary_surgeon'
-         WHERE sc2.procedure_code = sp.procedure_code AND sta2.staff_id = s.staff_id), 0), 1) AS complication_pct
-FROM IntraOp_Event ie
-JOIN Surgery_Case sc ON ie.case_id = sc.case_id
-JOIN Surgical_Procedure sp ON sc.procedure_code = sp.procedure_code
-JOIN Surgical_Team_Assignment sta
-    ON sc.case_id = sta.case_id AND sta.role = 'primary_surgeon'
-JOIN Staff s ON sta.staff_id = s.staff_id
-WHERE ie.event_type = 'bleeding'
-GROUP BY sp.name, s.name
+    sc.procedure_name,
+    sc.surgeon_name,
+    COALESCE(cc.cases_with_complications, 0) AS cases_with_complications,
+    ROUND(100.0 * COALESCE(cc.cases_with_complications, 0) / sc.total_cases, 1) AS complication_pct
+FROM surgeon_cases sc
+LEFT JOIN complicated_cases cc
+    ON sc.procedure_name = cc.procedure_name AND sc.surgeon_name = cc.surgeon_name
 ORDER BY complication_pct DESC;
 
 -- -------------------------------------------------

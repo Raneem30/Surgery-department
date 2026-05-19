@@ -63,9 +63,10 @@ Operating Theater module for the Surgery Department. Manages patients, surgical 
 | role | VARCHAR(20) | | NOT NULL, CHECK (IN 'doctor','nurse','tech') |
 | sex | CHAR(1) | | CHECK (IN 'M','F') |
 | birth_date | DATE | | |
-| major_area | VARCHAR(100) | | (doctor-specific) |
-| degree | VARCHAR(50) | | (doctor-specific) |
+| major_area | VARCHAR(100) | | NOT NULL when role='doctor', NULL otherwise |
+| degree | VARCHAR(50) | | NOT NULL when role='doctor', NULL otherwise |
 | department_code | VARCHAR(10) | FK → Department | NOT NULL |
+| **Role Validation** | | | CHECK ((role='doctor' AND major_area IS NOT NULL AND degree IS NOT NULL) OR (role!='doctor' AND major_area IS NULL AND degree IS NULL)) |
 | join_date | DATE | | |
 | email | VARCHAR(100) | | |
 | phone | VARCHAR(20) | | |
@@ -79,6 +80,7 @@ Operating Theater module for the Surgery Department. Manages patients, surgical 
 | patient_number | VARCHAR(20) | PK, FK → Patient | NOT NULL, ON DELETE CASCADE |
 | staff_id | INTEGER | PK, FK → Staff | NOT NULL, ON DELETE CASCADE |
 | hours_per_week | INTEGER | | CHECK (>= 0) |
+| **Doctor-Only** | | | Trigger: BEFORE INSERT/UPDATE ensures staff_id references a doctor |
 
 ---
 
@@ -92,6 +94,7 @@ Operating Theater module for the Surgery Department. Manages patients, surgical 
 | prescription_date | DATE | | NOT NULL |
 | start_date | DATE | | NOT NULL |
 | end_date | DATE | | NOT NULL, CHECK (end >= start) |
+| **Doctor-Only** | | | Trigger: BEFORE INSERT/UPDATE ensures staff_id references a doctor |
 
 ---
 
@@ -374,6 +377,9 @@ Operating Theater module for the Surgery Department. Manages patients, surgical 
 | Entity | Relationship | Constraint | Meaning |
 |--------|-------------|------------|---------|
 | Staff | belongs to → Department | **Total** | department_code NOT NULL |
+| Staff | major_area / degree | **Total (conditional)** | NOT NULL when role='doctor', NULL otherwise |
+| Treats staff_id | Treats → Staff(doctor) | **Total** | Trigger ensures only doctors can treat patients |
+| Prescription staff_id | Prescription → Staff(doctor) | **Total** | Trigger ensures only doctors can prescribe |
 | Department | has chairman → Staff(doctor) | **Partial** | chairman_staff_id nullable |
 | Department | belongs to → Hospital | **Total** | hospital_id NOT NULL |
 | Room | belongs to → Hospital | **Total** | hospital_id NOT NULL |
