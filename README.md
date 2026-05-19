@@ -5,7 +5,7 @@ A specialized database for the Surgery Department. Manages surgical cases, OR sc
 
 ---
 
-## Phase 1: Database Design & Implementation (May 16)
+## Phase 1: Database Design & Implementation 
 
 ### Deliverable 1: Database Plan
 
@@ -42,7 +42,7 @@ A specialized database for the Surgery Department. Manages surgical cases, OR sc
 
 ---
 
-## Phase 2: Application Features & Presentation (May 23)
+## Phase 2: Application Features & Presentation
 
 ### Tech Stack
 - **Backend:** Spring Boot (Java)
