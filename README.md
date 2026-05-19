@@ -1,7 +1,7 @@
 # Surgery Department
 
 ## Project Overview
-A specialized database for the Surgery Department. Manages surgical cases, OR scheduling with overlap prevention, surgical teams, intraoperative events, implants, specimens, PACU recovery, and safety counts.
+A specialized database for the Surgery Department. Manages surgical cases, OR scheduling with overlap prevention, surgical teams, appointments, payments, and patient records.
 
 ---
 
@@ -11,34 +11,32 @@ A specialized database for the Surgery Department. Manages surgical cases, OR sc
 
 | File | Description |
 |------|-------------|
-| `docs/erd/plan.md` | Comprehensive database plan — 25 tables, attributes, domains, keys, constraints, relationships, completeness constraints, functional requirements, normalization |
-| `docs/erd/ERD.puml` | Original PlantUML ERD (legacy) |
+| `docs/erd/plan.md` | Comprehensive database plan — 20 tables, attributes, domains, keys, constraints, relationships, completeness constraints, functional requirements, normalization |
 | `docs/erd/keys_table.md` | PK/FK reference — all primary keys, foreign keys, composite keys, unique constraints, and indexes |
 
-**Entities (25 tables):**
-- **Core:** Patient, Hospital, Department, Department_Location, Staff (replaces Doctor)
-- **Clinical:** Treats, Prescription, Medication, Prescription_Medication, Vital_Sign, Admission, Scan_Document
-- **Surgery:** Surgical_Procedure, Surgery_Case, Surgery_Schedule, Surgical_Team_Assignment, IntraOp_Event, IntraOp_Medication
-- **Peri-op:** Specimen, Implant_Device, PACU_Record, Surgical_Count, Surgery_Audit_Log
-- **Clinic:** Clinic_Appointment (pre-op/post-op visits)
-
-**Removed (general clinic tables):** Geo_Location, Contact_Inquiry, User, Payment, Appointment (renamed), Doctor (replaced by Staff)
+**Entities (20 tables):**
+- **Core & Location:** Patient (with embedded vitals), Hospital, Geo_Location, Department, Department_Location
+- **Personnel:** Doctor
+- **Clinical:** Treats, Prescription, Medication, Prescription_Medication, Scan_Document
+- **Scheduling & Finance:** Appointment, Payment, Contact_Inquiry
+- **Access:** User
+- **Facilities:** Room (enhanced for Surgery — OR rooms)
+- **Surgery:** Surgical_Procedure, Surgery_Case, Surgery_Schedule (with OR overlap prevention), Surgical_Team_Assignment
 
 ### Deliverable 2: SQL Implementation
 
 | File | Description |
 |------|-------------|
-| `sql/schema.sql` | DDL — 25 CREATE TABLE statements, CHECK/FK/UNIQUE constraints, `EXCLUDE USING gist` for OR overlap prevention, audit triggers, 34 indexes |
-| `sql/seed.sql` | Realistic seed data — hospitals, ORs (with robot/C-arm/flow), procedures (CPT codes), surgery cases, schedules, teams, events, implants, specimens, PACU records, counts |
-| `sql/queries.sql` | 17 surgery-specific queries — daily OR schedule, implant traceability, count mismatch alerts, PACU recovery times, complication rates, OR utilization, emergency response time, staff workload, turnaround time, intra-op medication log, audit trail |
+| `sql/schema.sql` | DDL — 20 CREATE TABLE statements, CHECK/FK/UNIQUE constraints, `EXCLUDE USING gist` for OR overlap prevention, 28 indexes |
+| `sql/seed.sql` | Realistic seed data — hospitals, geo locations, departments, doctors, patients (with vitals), medications, prescriptions, rooms, procedures (CPT codes), surgery cases, schedules, team assignments, appointments, payments, users, contact inquiries, scan documents |
+| `sql/queries.sql` | 10 surgery-specific queries — daily OR schedule, surgeries by status, OR utilization, doctor workload, procedure duration vs standard, cancelled surgeries, team role distribution, OR turnaround time, patient payment history, upcoming appointments |
 
 ### Key Features
 - **OR Overlap Prevention** — `EXCLUDE USING gist (or_room_id WITH =, tstzrange(scheduled_start, scheduled_end) WITH &&)`
-- **Safety** — Surgical_Count with pre/post discrepancy alerts
-- **Traceability** — Implant_Device with serial/lot/manufacturer tracking
+- **Patient Vitals Embedded** — blood pressure, heart rate, temperature, SpO2 stored directly in Patient table
 - **Peri-operative Workflow** — Surgery_Case status pipeline (scheduled → pre_op → in_or → in_pacu → completed)
-- **PACU Recovery** — Aldrete and pain score tracking
-- **Specimen Tracking** — Laterality, tissue type, container, pathology request ID
+- **Payment Lifecycle** — Register/pay/refund per appointment
+- **Role-based Access** — User table with admin/doctor/nurse/staff roles
 
 ---
 
@@ -51,6 +49,6 @@ A specialized database for the Surgery Department. Manages surgical cases, OR sc
 - **Build Tool:** Maven
 
 ### Presentation
-- Schema walkthrough (23 tables, 27 indexes, exclusion constraint)
+- Schema walkthrough (20 tables, 28 indexes, exclusion constraint)
 - Key surgery queries demonstration
 - OR scheduling with overlap prevention explanation
