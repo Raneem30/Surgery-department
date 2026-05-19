@@ -1,7 +1,7 @@
-# Surgery Department — Operating Theater Module
+# Surgery Department
 
 ## Project Overview
-A specialized **Operating Theater database** for the Surgery Department. Manages surgical cases, OR scheduling with overlap prevention, surgical teams, intraoperative events, implants, specimens, PACU recovery, and safety counts.
+A specialized database for the Surgery Department. Manages surgical cases, OR scheduling with overlap prevention, surgical teams, intraoperative events, implants, specimens, PACU recovery, and safety counts.
 
 ---
 
