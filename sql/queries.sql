@@ -156,13 +156,16 @@ ORDER BY turnaround_minutes DESC;
 SELECT
     p.patient_number,
     p.name AS patient_name,
+    a.appointment_id,
+    a.appointment_date,
     pm.payment_id,
     pm.amount,
     pm.payment_type,
     pm.payment_date,
     pm.description
-FROM Patient p
-JOIN Payment pm ON p.patient_number = pm.patient_number
+FROM Payment pm
+JOIN Appointment a ON pm.appointment_id = a.appointment_id
+JOIN Patient p ON a.patient_number = p.patient_number
 ORDER BY pm.payment_date DESC;
 
 -- -------------------------------------------------

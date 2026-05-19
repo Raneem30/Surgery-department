@@ -331,7 +331,7 @@ Operating Theater module for the Surgery Department. Manages patients (with embe
 | 6 | Cancelled surgeries | Surgery_Case, Surgical_Procedure, Surgery_Schedule |
 | 7 | Team role distribution | Surgical_Team_Assignment, Surgery_Case, Surgical_Procedure |
 | 8 | OR turnaround time | Surgery_Schedule (LEAD window) |
-| 9 | Patient payment history | Patient, Payment |
+| 9 | Patient payment history | Payment, Appointment, Patient |
 | 10 | Upcoming appointments | Appointment, Patient, Doctor, Room |
 
 ---
